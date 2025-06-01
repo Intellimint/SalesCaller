@@ -262,63 +262,7 @@
                             </div>
                             <div class="p-6">
                                 <div class="space-y-4" id="promptsList">
-                                    <div class="prompt-item border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50" data-prompt="default">
-                                        <div class="flex items-center justify-between">
-                                            <div>
-                                                <h4 class="font-medium">Default</h4>
-                                                <p class="text-sm text-gray-600">File: default.txt</p>
-                                                <span class="inline-block mt-2 px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded">Default</span>
-                                            </div>
-                                            <div class="flex space-x-2">
-                                                <button class="p-2 text-gray-400 hover:text-gray-600" title="Preview">
-                                                    <i data-lucide="eye" class="w-4 h-4"></i>
-                                                </button>
-                                                <button class="p-2 text-gray-400 hover:text-gray-600" title="Edit">
-                                                    <i data-lucide="edit" class="w-4 h-4"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="prompt-item border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50" data-prompt="demo">
-                                        <div class="flex items-center justify-between">
-                                            <div>
-                                                <h4 class="font-medium">Demo</h4>
-                                                <p class="text-sm text-gray-600">File: demo.txt</p>
-                                            </div>
-                                            <div class="flex space-x-2">
-                                                <button class="p-2 text-gray-400 hover:text-gray-600" title="Preview" onclick="viewPrompt('demo')">
-                                                    <i data-lucide="eye" class="w-4 h-4"></i>
-                                                </button>
-                                                <button class="p-2 text-gray-400 hover:text-gray-600" title="Edit" onclick="editPrompt('demo')">
-                                                    <i data-lucide="edit" class="w-4 h-4"></i>
-                                                </button>
-                                                <button class="p-2 text-red-400 hover:text-red-600" title="Delete" onclick="deletePrompt('demo')">
-                                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="prompt-item border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50" data-prompt="followup">
-                                        <div class="flex items-center justify-between">
-                                            <div>
-                                                <h4 class="font-medium">Followup</h4>
-                                                <p class="text-sm text-gray-600">File: followup.txt</p>
-                                            </div>
-                                            <div class="flex space-x-2">
-                                                <button class="p-2 text-gray-400 hover:text-gray-600" title="Preview" onclick="viewPrompt('followup')">
-                                                    <i data-lucide="eye" class="w-4 h-4"></i>
-                                                </button>
-                                                <button class="p-2 text-gray-400 hover:text-gray-600" title="Edit" onclick="editPrompt('followup')">
-                                                    <i data-lucide="edit" class="w-4 h-4"></i>
-                                                </button>
-                                                <button class="p-2 text-red-400 hover:text-red-600" title="Delete" onclick="deletePrompt('followup')">
-                                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <!-- Prompts will be loaded dynamically -->
                                 </div>
 
                                 <!-- Prompt Guidelines -->
@@ -1360,7 +1304,7 @@
                 if (response.ok) {
                     alert('Prompt created successfully');
                     document.querySelector('.fixed').remove();
-                    location.reload(); // Refresh to show new prompt
+                    loadPrompts(); // Refresh prompts list
                 } else {
                     const error = await response.text();
                     alert('Failed to create prompt: ' + error);
@@ -1458,7 +1402,7 @@
                 
                 if (response.ok) {
                     alert('Prompt deleted successfully');
-                    location.reload(); // Refresh to remove deleted prompt
+                    loadPrompts(); // Refresh prompts list
                 } else {
                     const error = await response.text();
                     alert('Failed to delete prompt: ' + error);
@@ -1468,12 +1412,70 @@
             }
         }
 
+        // Load prompts from API
+        async function loadPrompts() {
+            try {
+                const response = await fetch('/api/prompts');
+                if (response.ok) {
+                    const prompts = await response.json();
+                    const promptsList = document.getElementById('promptsList');
+                    
+                    if (promptsList) {
+                        promptsList.innerHTML = prompts.map(prompt => `
+                            <div class="prompt-item border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50" data-prompt="${prompt.id}">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="font-medium">${prompt.name}</h4>
+                                        <p class="text-sm text-gray-600">File: ${prompt.filename}</p>
+                                        ${prompt.id === 'default' ? '<span class="inline-block mt-2 px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded">Default</span>' : ''}
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <button class="p-2 text-gray-400 hover:text-gray-600" title="Preview" onclick="viewPrompt('${prompt.id}')">
+                                            <i data-lucide="eye" class="w-4 h-4"></i>
+                                        </button>
+                                        <button class="p-2 text-gray-400 hover:text-gray-600" title="Edit" onclick="editPrompt('${prompt.id}')">
+                                            <i data-lucide="edit" class="w-4 h-4"></i>
+                                        </button>
+                                        ${prompt.id !== 'default' ? `<button class="p-2 text-red-400 hover:text-red-600" title="Delete" onclick="deletePrompt('${prompt.id}')">
+                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                        </button>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                        
+                        // Re-initialize lucide icons
+                        if (typeof lucide !== 'undefined') {
+                            lucide.createIcons();
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load prompts:', error);
+            }
+        }
+
         // Add event listener for create prompt button
         document.addEventListener('DOMContentLoaded', function() {
             const createBtn = document.getElementById('createPromptBtn');
             if (createBtn) {
                 createBtn.addEventListener('click', showCreatePromptDialog);
             }
+            
+            // Load prompts when page loads and when prompts tab is selected
+            loadPrompts();
+        });
+        
+        // Load prompts when navigating to prompts page
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (this.getAttribute('href') === '#prompts') {
+                        setTimeout(loadPrompts, 100); // Small delay to ensure page is switched
+                    }
+                });
+            });
         });
     </script>
 </body>

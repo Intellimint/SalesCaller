@@ -1,0 +1,91 @@
+Below is a single, self-contained prompt you can paste straight into **Replit Agent** so it will:
+
+* retire the old Node/Express server
+* make the FastAPI service the one and only backend + static host
+* clean up ports, run-command, secrets, and tests
+* leave you with one click-to-run Repl that’s production-ready for your pilot.
+
+---
+
+### 📜 REPLIT AGENT TASK – “PROMOTE FASTAPI TO PRIMARY”
+
+You’ve completed the FastAPI rewrite. Now finalize the migration and decommission the Node server.
+
+---
+
+#### 1 · Remove Node layer
+
+* Delete `package.json`, `server.js`, `app.js`, any `/node_modules` folder, and the Heroku-style Procfile if present.
+* Delete references to port 5000 in HTML or JS.
+
+#### 2 · Serve frontend from FastAPI
+
+* In `backend/main.py` (or `main.py`), keep:
+
+```python
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
+```
+
+* Update every AJAX call in `/static/*.html` or `/static/app.js` to **relative paths** (`/api/upload-leads`, `/api/start`, `/api/calls`).  No hard-coded port numbers.
+
+#### 3 · Consolidate run command
+
+* **`.replit`**
+
+```
+run = "uvicorn backend.main:app --host 0.0.0.0 --port 3000 --reload"
+```
+
+* **`replit.nix`** – drop Node packages; keep only:
+
+```
+python311
+python311Packages.fastapi
+python311Packages.uvicorn
+python311Packages.httpx
+python311Packages.aiosqlite
+python311Packages.python-dotenv
+sqlite
+```
+
+#### 4 · Environment & health
+
+* Ensure the Replit Secret **`CALLBACK_URL`** is exactly:
+
+```
+https://callninja.replit.app/webhook
+```
+
+* Add a simple `/healthz` route that returns `{"status":"ok","queue": <queue length>}` so future uptime checks hit one endpoint.
+
+#### 5 · Default prompt + sample CSV
+
+* Place `prompts/default.txt`:
+
+```
+Hi, this is ${rep_name} from Luma. Quick question—are you happy with how many qualified leads you're getting each month?
+```
+
+* Put `data/sample.csv` with one row (your cell) so newcomers can test immediately.
+
+#### 6 · Docs & README
+
+* Overwrite `README.md`:
+
+  1. **Setup** – add secrets, click *Run*
+  2. **Start a campaign** – upload CSV → click *Start* → watch dashboard
+  3. **DB files** live in `data.db` (persist across restarts)
+
+#### 7 · Smoke test before commit
+
+1. `poetry install` or `pip install -r requirements.txt` is run by nix.
+2. Run Repl → open `/` – index page should load.
+3. Upload `sample.csv`, click **Start** → see row in dashboard with status `dialing`.
+4. Receive call, hang up → webhook marks status `done`; outcome appears.
+5. `/healthz` returns 200 JSON.
+
+If all five steps pass, commit the checkpoint and delete the obsolete Node code in the same commit.
+
+---
+
+**End of instructions – after this, the Repl should run solely on FastAPI with the new queue, DB, webhook, and UI.**

@@ -60,11 +60,16 @@ async def list_calls():
         rows = await cur.fetchall()
     return [dict(zip(("phone","company","outcome","transcript"), r)) for r in rows]
 
+@app.get("/healthz")
+async def health_check():
+    return {"status": "ok", "queue": QUEUE.qsize()}
+
 @app.get("/api/stats")
 async def get_stats():
     db = await get_db()
     async with db.execute("SELECT COUNT(*) FROM leads") as cur:
-        total_leads = (await cur.fetchone())[0]
+        row = await cur.fetchone()
+        total_leads = row[0] if row else 0
     
     async with db.execute("SELECT COUNT(*) FROM calls") as cur:
         calls_made = (await cur.fetchone())[0]

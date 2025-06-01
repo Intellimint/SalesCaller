@@ -1000,7 +1000,23 @@
                                 </div>
                                 <span class="px-2 py-1 text-xs rounded-full ${call.status === 'completed' ? 'bg-green-100 text-green-800' : call.status === 'failed' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}">${call.status}</span>
                             </div>
-                            <p class="text-xs text-gray-500">${new Date(call.timestamp).toLocaleString()}</p>
+                            ${call.outcome ? `<p class="text-sm text-gray-700 mb-2"><strong>Outcome:</strong> ${call.outcome}</p>` : ''}
+                            ${call.duration ? `<p class="text-sm text-gray-600 mb-2"><strong>Duration:</strong> ${Math.floor(call.duration / 60)}:${(call.duration % 60).toString().padStart(2, '0')}</p>` : ''}
+                            ${call.transcript ? `
+                                <details class="mt-2">
+                                    <summary class="text-sm font-medium text-blue-600 cursor-pointer">View Transcript</summary>
+                                    <div class="mt-2 p-3 bg-gray-50 rounded text-sm text-gray-700 max-h-40 overflow-y-auto">
+                                        ${call.transcript.replace(/\n/g, '<br>')}
+                                    </div>
+                                </details>
+                            ` : ''}
+                            ${call.ai_summary ? `
+                                <div class="mt-2 p-3 bg-blue-50 rounded">
+                                    <p class="text-sm font-medium text-blue-800">AI Summary:</p>
+                                    <p class="text-sm text-blue-700">${call.ai_summary}</p>
+                                </div>
+                            ` : ''}
+                            <p class="text-xs text-gray-500 mt-2">${new Date(call.timestamp).toLocaleString()}</p>
                         </div>
                     `).join('');
                 }

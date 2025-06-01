@@ -84,7 +84,7 @@ async def create_call(lead_id: int):
         "task": prompt,
         "voice_id": os.getenv("VOICE_ID", "default"),
         "model": "base",
-        "callback_url": os.getenv("CALLBACK_URL")
+        "callback_url": "https://callninja.replit.app/webhook"
     }
     headers = {"Authorization": os.getenv("BLAND_API_KEY", "")}
     
@@ -290,7 +290,7 @@ async def test_call(data: dict):
             "phone_number": phone,
             "task": prompt,
             "voice_id": voice_id,
-            "webhook": os.getenv("CALLBACK_URL", "https://callninja.replit.app") + "/webhook",
+            "webhook": "https://callninja.replit.app/webhook",
             "reduce_latency": True
         }
         

@@ -586,6 +586,8 @@
                     initializePromptHandlers();
                 } else if (href === 'testing') {
                     initializeTestCall();
+                } else if (href === 'dashboard' || href === 'campaigns') {
+                    loadVoices();
                 }
             });
         });
@@ -828,6 +830,40 @@
                 testCallForm.addEventListener('submit', handleTestCall);
             }
             loadTestCalls();
+            loadVoices();
+        }
+        
+        async function loadVoices() {
+            try {
+                const response = await fetch('/api/voices');
+                const voices = await response.json();
+                
+                // Update test call voice dropdown
+                const testVoiceSelect = document.getElementById('testVoice');
+                if (testVoiceSelect) {
+                    testVoiceSelect.innerHTML = '<option value="">Default Voice</option>';
+                    voices.forEach(voice => {
+                        const option = document.createElement('option');
+                        option.value = voice.voice_id || '';
+                        option.textContent = voice.name || 'Unknown Voice';
+                        testVoiceSelect.appendChild(option);
+                    });
+                }
+                
+                // Update campaign voice dropdown if it exists
+                const campaignVoiceSelect = document.getElementById('voiceSelect');
+                if (campaignVoiceSelect) {
+                    campaignVoiceSelect.innerHTML = '<option value="">Default Voice</option>';
+                    voices.forEach(voice => {
+                        const option = document.createElement('option');
+                        option.value = voice.voice_id || '';
+                        option.textContent = voice.name || 'Unknown Voice';
+                        campaignVoiceSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to load voices:', error);
+            }
         }
         
         async function handleTestCall(e) {

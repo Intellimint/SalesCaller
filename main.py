@@ -39,6 +39,9 @@ async def init_db():
             lead_id INTEGER,
             phone TEXT,
             company TEXT,
+            status TEXT DEFAULT 'queued',
+            call_id TEXT,
+            prompt_name TEXT,
             outcome TEXT,
             transcript TEXT,
             duration INTEGER,
@@ -232,10 +235,14 @@ async def test_call(data: dict):
         }
         
         async with httpx.AsyncClient() as client:
+            api_key = os.getenv("BLAND_API_KEY")
+            if not api_key:
+                return {"success": False, "message": "Bland.ai API key not configured"}
+            
             response = await client.post(
                 "https://api.bland.ai/v1/calls",
                 json=bland_payload,
-                headers={"Authorization": os.getenv("BLAND_API_KEY")}
+                headers={"Authorization": api_key}
             )
             
             if response.status_code == 200:
@@ -275,6 +282,30 @@ async def get_test_calls():
         "status": r[2],
         "timestamp": r[3]
     } for r in rows]
+
+@app.get("/api/voices")
+async def get_voices():
+    """Get available voice options"""
+    try:
+        async with httpx.AsyncClient() as client:
+            api_key = os.getenv("BLAND_API_KEY")
+            if not api_key:
+                return [{"voice_id": os.getenv("VOICE_ID", ""), "name": "Professional Male (Default)"}]
+            
+            response = await client.get(
+                "https://api.bland.ai/v1/voices",
+                headers={"Authorization": api_key}
+            )
+            
+            if response.status_code == 200:
+                voices_data = response.json()
+                return voices_data.get("voices", [])
+            else:
+                # Return default voice if API fails
+                return [{"voice_id": os.getenv("VOICE_ID", ""), "name": "Professional Male (Default)"}]
+    except Exception as e:
+        # Return default voice if error occurs
+        return [{"voice_id": os.getenv("VOICE_ID", ""), "name": "Professional Male (Default)"}]
 
 @app.get("/api/stats")
 async def get_stats():

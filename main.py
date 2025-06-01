@@ -347,23 +347,78 @@ async def webhook_handler(request_data: dict):
     duration = request_data.get("call_length", 0)
     status = "completed" if outcome else "failed"
     
+    # Check for booking information in transcript
+    meeting_time = None
+    email = None
+    conversion_flag = 0
+    
+    if transcript:
+        # Look for meeting booking patterns in transcript
+        import re
+        
+        # Check for email patterns
+        email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+        email_matches = re.findall(email_pattern, transcript)
+        if email_matches:
+            email = email_matches[0]
+        
+        # Check for time/meeting patterns
+        time_patterns = [
+            r'(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday)',
+            r'(?:tomorrow|next week)',
+            r'\d{1,2}:\d{2}',
+            r'(?:morning|afternoon|evening)',
+            r'(?:meeting|call|appointment)'
+        ]
+        
+        transcript_lower = transcript.lower()
+        meeting_indicators = sum(1 for pattern in time_patterns if re.search(pattern, transcript_lower))
+        
+        # If we found email and time indicators, mark as conversion
+        if email and meeting_indicators >= 2:
+            conversion_flag = 1
+            # Extract rough meeting time from transcript
+            meeting_time = "Meeting scheduled - see transcript for details"
+    
     if call_id:
         db = await get_db()
         
         # Update lead status if this was a campaign call
         await db.execute("UPDATE leads SET status='completed' WHERE bland_call_id=?", (call_id,))
         
-        # Update call record (works for both campaign calls and test calls)
+        # Update call record with booking information
         await db.execute("""
             UPDATE calls 
-            SET status=?, outcome=?, transcript=?, duration=? 
+            SET status=?, outcome=?, transcript=?, duration=?, meeting_time=?, email=?, conversion_flag=? 
             WHERE call_id=?
-        """, (status, outcome, transcript, duration, call_id))
+        """, (status, outcome, transcript, duration, meeting_time, email, conversion_flag, call_id))
+        
+        # If conversion detected, trigger booking workflow
+        if conversion_flag == 1:
+            await handle_booking(call_id, email, meeting_time, transcript)
         
         await db.commit()
         await db.close()
     
     return {"status": "ok"}
+
+async def handle_booking(call_id: str, email: str, meeting_time: str, transcript: str):
+    """Handle successful booking - placeholder for calendar integration"""
+    # For now, just log the booking
+    print(f"BOOKING DETECTED: Call {call_id}, Email: {email}, Time: {meeting_time}")
+    # Future: integrate with Calendly/Google Calendar
+
+@app.post("/api/send-invite")
+async def send_booking_invite(data: dict):
+    """Send calendar invite to booked prospect"""
+    email = data.get("email")
+    meeting_time = data.get("meeting_time")
+    call_id = data.get("call_id")
+    
+    # For now, just log the invite request
+    print(f"INVITE REQUEST: {email}, {meeting_time}, Call: {call_id}")
+    
+    return {"success": True, "message": "Invite logged for manual follow-up"}
 
 if __name__ == "__main__":
     uvicorn.run(

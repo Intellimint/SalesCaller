@@ -1,0 +1,44 @@
+### My recommendation: **tackle two “force-multiplier” builds in sequence**
+
+1. **🎯 Booking-Outcome Pipeline (very small but critical) – *1–2 hours***
+   *Locks in the single conversion metric you just chose.*
+
+   1. **DB update** – add `meeting_time`, `email`, `conversion_flag` columns to `calls`.
+   2. **Prompt tweak** – final branch asks for two time slots + work email → returns JSON tool-call.
+   3. **Webhook hook** – when JSON contains `meeting_time` + `email`, mark `conversion_flag=1` and POST to a stub endpoint `/api/send-invite`.
+   4. **Invite stub** – for now just log the details; later wire Calendly/Google.
+   5. **Dashboard badge** – if `conversion_flag=1`, paint row green.
+
+   *Why first?* You’ll instantly know whether the AI hit the goal on every call; all later analytics revolve around this truth signal.
+
+2. **📊 Lean Analytics & Auto-Tagging – *next 6–8 hours***
+   *Turns raw transcripts into the feedback loop that will power self-improvement.*
+
+   **Step-by-step spec for Replit Agent**
+
+   | Task                                        | Implementation hint                                                                                                                                       |
+   | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+   | **/api/analyze** job                        | Background coroutine that picks up new “done” calls lacking tags.                                                                                         |
+   | **OpenAI function-call prompt**             | Feed transcript → return `{sentiment, objection, interest_level}`.                                                                                        |
+   | **DB columns**                              | `sentiment TEXT`, `objection TEXT`, `interest_level TEXT`, `script_version INTEGER`.                                                                      |
+   | **Analytics page** `/static/analytics.html` | • bar chart: conversions / 100 dials<br>• pie: objection distribution<br>• line: conversion trend by script\_version<br>JS fetch `/api/stats` every 30 s. |
+   | **/api/stats**                              | Simple aggregate SQL counts grouped by day & tag.                                                                                                         |
+
+   **Minimal tech:** stay in FastAPI, no extra libs beyond `openai` and a tiny chart lib like Chart.js served statically.
+
+---
+
+### Why **this** order?
+
+1. **Booking pipeline** gives you an unambiguous success flag (`conversion_flag`).
+2. **Analytics module** instantly has the ground-truth label it needs to correlate phrases, sentiments, objections → conversion.
+3. When those two pieces are live, the **script A/B engine** is just:
+   *“Pick top-2 performing openings by conversion rate, swap into prompt\_version=n+1.”*
+
+---
+
+### One-sentence task for Replit Agent
+
+> “Add booking-outcome capture (meeting\_time + email) with green conversion badge, then build `/api/analyze` + `/api/stats` auto-tagging using OpenAI and an `analytics.html` view with conversion charts.”
+
+Ship that and you’ll have a fully closed loop: **dial → convert → learn → improve.**

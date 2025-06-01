@@ -336,6 +336,10 @@ async def test_call(data: dict):
                 await db.close()
                 print("[TEST CALL] Call stored in database successfully")
                 
+                # Also log the webhook URL for verification
+                print(f"[TEST CALL] Webhook configured: https://callninja.replit.app/webhook")
+                print(f"[TEST CALL] Call should appear in dashboard shortly. Check Bland.ai for call progress.")
+                
                 return {"success": True, "call_id": call_id, "message": "Test call initiated successfully"}
             else:
                 print(f"[TEST CALL] ERROR: Bland.ai API failed with status {response.status_code}: {response.text}")
@@ -353,7 +357,7 @@ async def get_test_calls():
     """Get recent test calls"""
     db = await get_db()
     async with db.execute(
-        "SELECT phone, company, outcome, created_at FROM calls WHERE company LIKE '%Test%' ORDER BY created_at DESC LIMIT 10"
+        "SELECT phone, company, outcome, transcript, duration, call_id, created_at FROM calls WHERE call_id IS NOT NULL ORDER BY created_at DESC LIMIT 10"
     ) as cur:
         rows = await cur.fetchall()
     await db.close()
@@ -362,8 +366,11 @@ async def get_test_calls():
         "phone": r[0],
         "contact": r[1].split(" - ")[0] if " - " in r[1] else "Test Contact",
         "company": r[1].split(" - ")[1] if " - " in r[1] else r[1],
-        "status": r[2] or "completed",
-        "timestamp": r[3]
+        "status": r[2] or "in_progress",
+        "transcript": r[3] or "Call in progress...",
+        "duration": r[4] or 0,
+        "call_id": r[5],
+        "timestamp": r[6]
     } for r in rows]
 
 @app.get("/api/voices")

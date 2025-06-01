@@ -2,7 +2,7 @@ import os
 import asyncio
 import uvicorn
 import json
-from fastapi import FastAPI, UploadFile, Form, BackgroundTasks
+from fastapi import FastAPI, UploadFile, Form, BackgroundTasks, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import aiosqlite
@@ -685,6 +685,16 @@ async def get_analytics_stats():
         "interest_levels": [{"level": r[0], "count": r[1], "avg_duration": r[2], "conversions": r[3]} for r in interest_levels],
         "sentiment_stats": [{"sentiment": r[0], "avg_duration": r[1], "count": r[2], "conversions": r[3]} for r in sentiment_stats]
     }
+
+# Catch-all route for SPA routing - serve index.html for all non-API routes
+# This MUST be the last route defined
+@app.get("/{path:path}")
+async def serve_spa(path: str):
+    # Don't interfere with API routes or static files
+    if path.startswith(("api/", "static/")):
+        raise HTTPException(status_code=404, detail="Not found")
+    # Serve the React app for all other routes
+    return FileResponse("static/index.html")
 
 if __name__ == "__main__":
     uvicorn.run(

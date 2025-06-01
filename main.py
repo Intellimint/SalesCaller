@@ -345,17 +345,21 @@ async def webhook_handler(request_data: dict):
     outcome = request_data.get("outcome", "unknown")
     transcript = request_data.get("transcript", "")
     duration = request_data.get("call_length", 0)
+    status = "completed" if outcome else "failed"
     
     if call_id:
         db = await get_db()
-        # Update lead status
+        
+        # Update lead status if this was a campaign call
         await db.execute("UPDATE leads SET status='completed' WHERE bland_call_id=?", (call_id,))
-        # Update call record
+        
+        # Update call record (works for both campaign calls and test calls)
         await db.execute("""
             UPDATE calls 
-            SET outcome=?, transcript=?, duration=? 
-            WHERE lead_id IN (SELECT id FROM leads WHERE bland_call_id=?)
-        """, (outcome, transcript, duration, call_id))
+            SET status=?, outcome=?, transcript=?, duration=? 
+            WHERE call_id=?
+        """, (status, outcome, transcript, duration, call_id))
+        
         await db.commit()
         await db.close()
     

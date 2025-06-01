@@ -336,7 +336,8 @@ export default function Prompts() {
                       Script Content
                     </label>
                     <Textarea
-                      value={selectedPrompt.content || "Loading..."}
+                      value={isEditing ? editedContent : selectedPrompt.content || "Loading..."}
+                      onChange={(e) => setEditedContent(e.target.value)}
                       readOnly={!isEditing}
                       placeholder="Enter your AI calling script..."
                       className="min-h-[400px] font-mono text-sm"

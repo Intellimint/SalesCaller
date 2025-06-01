@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request
-from backend.db.db import get_db
+from db.db import get_db
 
 webhook_router = APIRouter()
 

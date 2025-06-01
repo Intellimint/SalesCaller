@@ -1,5 +1,5 @@
 import os, httpx, json
-from backend.db.db import get_db
+from db.db import get_db
 from .prompt_utils import render_prompt
 
 API_KEY = os.getenv("BLAND_API_KEY")
@@ -23,7 +23,7 @@ async def create_call(lead_id: int):
         "voice_id": VOICE_ID,
         "callback_url": CALLBACK_URL
     }
-    headers = {"Authorization": API_KEY}
+    headers = {"Authorization": API_KEY or ""}
 
     async with httpx.AsyncClient(timeout=60) as client:
         try:

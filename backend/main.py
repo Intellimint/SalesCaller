@@ -3,13 +3,13 @@ import uvicorn
 from fastapi import FastAPI, UploadFile, Form, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from backend.calls.call_engine import create_call
-from backend.calls.webhook import webhook_router
-from backend.db.db import init_db, get_db
+from calls.call_engine import create_call
+from calls.webhook import webhook_router
+from db.db import init_db, get_db
 
 app = FastAPI()
 app.include_router(webhook_router, prefix="/webhook")
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
+app.mount("/", StaticFiles(directory="../static", html=True), name="static")
 
 QUEUE = asyncio.Queue()
 CONCURRENCY = int(os.getenv("CONCURRENCY", 3))

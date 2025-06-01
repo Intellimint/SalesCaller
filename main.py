@@ -126,6 +126,15 @@ async def startup():
 async def serve_index():
     return FileResponse("static/index.html")
 
+# Catch-all route for SPA routing - serve index.html for all non-API routes
+@app.get("/{path:path}")
+async def serve_spa(path: str):
+    # Don't interfere with API routes
+    if path.startswith("api/"):
+        return {"error": "Not found"}
+    # Serve the React app for all other routes
+    return FileResponse("static/index.html")
+
 @app.get("/healthz")
 async def health_check():
     return {"status": "ok", "queue": QUEUE.qsize()}

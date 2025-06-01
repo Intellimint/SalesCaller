@@ -1,9 +1,1 @@
-Hi {contact}, this is Alex from Luma. Quick question—are you happy with how many qualified leads you're getting each month?
-
-[If interested, proceed to booking]
-
-That's exactly why I'm calling. We've helped companies like {company} increase their lead flow by 40% using AI-powered calling systems. 
-
-I'd love to show you a quick 15-minute demo of how this could work for {company}. Do you have your calendar handy? I have slots available tomorrow at 2 PM or Thursday at 10 AM. What works better for you?
-
-And what's the best email to send the meeting details to?
+Hi, this is Alex from Luma. Quick question—are you happy with how many qualified leads you're getting each month?

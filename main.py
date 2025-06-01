@@ -126,15 +126,6 @@ async def startup():
 async def serve_index():
     return FileResponse("static/index.html")
 
-# Catch-all route for SPA routing - serve index.html for all non-API routes
-@app.get("/{path:path}")
-async def serve_spa(path: str):
-    # Don't interfere with API routes
-    if path.startswith("api/"):
-        return {"error": "Not found"}
-    # Serve the React app for all other routes
-    return FileResponse("static/index.html")
-
 @app.get("/healthz")
 async def health_check():
     return {"status": "ok", "queue": QUEUE.qsize()}
@@ -198,6 +189,24 @@ async def list_calls():
         rows = await cur.fetchall()
     await db.close()
     return [{"phone": r[0], "company": r[1], "outcome": r[2], "transcript": r[3]} for r in rows]
+
+@app.get("/api/prompts")
+async def list_prompts():
+    """List all available prompts"""
+    try:
+        import glob
+        prompt_files = glob.glob("prompts/*.txt")
+        prompts = []
+        for file_path in prompt_files:
+            prompt_name = os.path.basename(file_path).replace(".txt", "")
+            prompts.append({
+                "id": prompt_name,
+                "name": prompt_name.title(),
+                "filename": f"{prompt_name}.txt"
+            })
+        return prompts
+    except Exception as e:
+        return []
 
 @app.get("/api/prompts/{prompt_name}")
 async def get_prompt(prompt_name: str):

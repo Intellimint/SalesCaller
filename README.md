@@ -1,4 +1,4 @@
-# SalesDialer - AI Outbound Calling Platform
+# Sales Ninja - AI Outbound Calling Platform
 
 FastAPI-based SaaS platform for automated outbound sales calls using Bland.ai.
 

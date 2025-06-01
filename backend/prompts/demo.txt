@@ -1,4 +1,4 @@
-Hi $contact, this is Sarah from SalesDialer. I hope you're having a great day!
+Hi $contact, this is Sarah from Sales Ninja. I hope you're having a great day!
 
 I'm reaching out to $company because I believe you'd be interested in seeing a live demonstration of our AI calling platform that's helping businesses like yours scale their outreach efforts.
 

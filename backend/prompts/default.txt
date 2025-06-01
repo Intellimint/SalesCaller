@@ -1,9 +1,20 @@
-Hi $contact, this is Sarah from SalesDialer. I hope I'm catching you at a good time. 
+Hi $contact, this is Sarah from Sales Ninja. I hope I'm catching you at a good time.
 
-I wanted to reach out because I noticed $company might benefit from our AI-powered outbound calling solution that's been helping companies increase their sales productivity by over 40%.
+I'm reaching out because we help companies like $company improve their sales outreach with our AI-powered outbound calling solution. We've seen great results with similar companies in your industry.
 
-We specialize in automating the initial outreach process while maintaining that personal touch your prospects expect. Our clients typically see a significant increase in qualified leads within the first 30 days.
+Would you be open to a quick chat about how we could help $company streamline your sales process?
 
-Would you be interested in learning how we could help $company streamline your sales process? I'd be happy to show you a quick demo of how this works.
+[If interested]
+That's great to hear! To make sure we send you the right information, could you share your email address? I'll make sure to send over our case studies and pricing details right away.
 
-What's the best way to continue this conversation?
+[If not interested]
+I understand. Would you mind sharing what's holding you back? This helps us improve our service.
+
+[If objection]
+I appreciate you sharing that. Many of our clients had similar concerns before seeing the results. Would you be open to a quick demo to see how we address that specifically?
+
+[If still interested after objection]
+Perfect! Could you share your email address so I can send over the demo details and some case studies?
+
+[If not interested after objection]
+I understand completely. If you change your mind or have any questions, feel free to reach out. Have a great day!

@@ -21,7 +21,7 @@ export function Sidebar() {
             <Phone className="text-white text-sm" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-slate-900">SalesDialer</h1>
+            <h1 className="text-lg font-semibold text-slate-900">Sales Ninja</h1>
             <p className="text-xs text-slate-500">AI Outbound Calling</p>
           </div>
         </div>

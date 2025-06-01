@@ -1,4 +1,4 @@
-Hi $contact, this is Sarah from SalesDialer following up on our previous conversation about helping $company improve your sales outreach.
+Hi $contact, this is Sarah from Sales Ninja following up on our previous conversation about helping $company improve your sales outreach.
 
 I wanted to circle back because I know how busy things can get, and I didn't want this opportunity to slip through the cracks.
 

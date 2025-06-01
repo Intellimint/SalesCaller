@@ -155,6 +155,19 @@ async def start_calls():
     
     return {"message": f"Started campaign", "queued": queued}
 
+@app.get("/api/leads")
+async def list_leads():
+    db = await get_db()
+    async with db.execute("""
+        SELECT phone, company, contact, status 
+        FROM leads 
+        ORDER BY created_at DESC 
+        LIMIT 100
+    """) as cur:
+        rows = await cur.fetchall()
+    await db.close()
+    return [{"phone": r[0], "company": r[1], "contact": r[2], "status": r[3]} for r in rows]
+
 @app.get("/api/calls")
 async def list_calls():
     db = await get_db()

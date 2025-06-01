@@ -28,9 +28,21 @@
                     <i data-lucide="bar-chart-3" class="w-5 h-5 mr-3"></i>
                     Dashboard
                 </a>
-                <a href="#upload" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
-                    <i data-lucide="upload" class="w-5 h-5 mr-3"></i>
-                    Upload Leads
+                <a href="#campaigns" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
+                    <i data-lucide="megaphone" class="w-5 h-5 mr-3"></i>
+                    Campaigns
+                </a>
+                <a href="#leads" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
+                    <i data-lucide="users" class="w-5 h-5 mr-3"></i>
+                    Leads
+                </a>
+                <a href="#prompts" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
+                    <i data-lucide="file-text" class="w-5 h-5 mr-3"></i>
+                    Prompts
+                </a>
+                <a href="#settings" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
+                    <i data-lucide="settings" class="w-5 h-5 mr-3"></i>
+                    Settings
                 </a>
             </nav>
         </div>
@@ -51,91 +63,272 @@
             </header>
 
             <main class="flex-1 p-6">
-                <!-- Stats Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-600">Total Leads</p>
-                                <p id="totalLeads" class="text-2xl font-bold text-gray-900">0</p>
+                <!-- Dashboard Page -->
+                <div id="dashboardPage" class="page">
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">Total Leads</p>
+                                    <p id="totalLeads" class="text-2xl font-bold text-gray-900">0</p>
+                                    <p class="text-xs text-green-600">+12% from last week</p>
+                                </div>
+                                <i data-lucide="users" class="w-8 h-8 text-blue-500"></i>
                             </div>
-                            <i data-lucide="users" class="w-8 h-8 text-blue-500"></i>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">Calls Made</p>
+                                    <p id="callsMade" class="text-2xl font-bold text-gray-900">0</p>
+                                    <p class="text-xs text-green-600">+8% from yesterday</p>
+                                </div>
+                                <i data-lucide="phone-call" class="w-8 h-8 text-green-500"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">Success Rate</p>
+                                    <p id="successRate" class="text-2xl font-bold text-gray-900">0%</p>
+                                    <p class="text-xs text-green-600">+2.1% from last month</p>
+                                </div>
+                                <i data-lucide="trending-up" class="w-8 h-8 text-purple-500"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">Active Calls</p>
+                                    <p id="activeCalls" class="text-2xl font-bold text-gray-900">0</p>
+                                    <p class="text-xs text-green-600">Live now</p>
+                                </div>
+                                <i data-lucide="phone" class="w-8 h-8 text-red-500"></i>
+                            </div>
                         </div>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-600">Calls Made</p>
-                                <p id="callsMade" class="text-2xl font-bold text-gray-900">0</p>
+
+                    <!-- Three Column Layout -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Upload Leads -->
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <h3 class="text-lg font-semibold mb-4">Upload Leads</h3>
+                            <div class="text-center py-8">
+                                <i data-lucide="upload" class="w-12 h-12 text-gray-400 mx-auto mb-4"></i>
+                                <p class="text-gray-600 mb-4">Click "Upload Leads" in the header to get started</p>
+                                <p class="text-sm text-gray-500">CSV format: phone, company, contact</p>
                             </div>
-                            <i data-lucide="phone-call" class="w-8 h-8 text-green-500"></i>
                         </div>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-600">Success Rate</p>
-                                <p id="successRate" class="text-2xl font-bold text-gray-900">0%</p>
+
+                        <!-- Campaign Settings -->
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <h3 class="text-lg font-semibold mb-4">Campaign Settings</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Concurrency Level</label>
+                                    <select id="concurrencySelect" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                        <option value="3">3 simultaneous calls</option>
+                                        <option value="5">5 simultaneous calls</option>
+                                        <option value="10">10 simultaneous calls</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Voice Selection</label>
+                                    <select id="voiceSelect" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                        <option value="professional-male">Professional Male</option>
+                                        <option value="professional-female">Professional Female</option>
+                                        <option value="conversational">Conversational</option>
+                                    </select>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <label class="text-sm font-medium text-gray-700">Auto-retry Failed Calls</label>
+                                    <input type="checkbox" id="autoRetryToggle" class="toggle" checked>
+                                </div>
                             </div>
-                            <i data-lucide="trending-up" class="w-8 h-8 text-purple-500"></i>
                         </div>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm text-gray-600">Active Calls</p>
-                                <p id="activeCalls" class="text-2xl font-bold text-gray-900">0</p>
+
+                        <!-- Live Status -->
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <h3 class="text-lg font-semibold mb-4">Live Status</h3>
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-gray-600">Campaign Stopped</span>
+                                    <span class="w-3 h-3 bg-gray-400 rounded-full"></span>
+                                </div>
+                                <p class="text-sm text-gray-500">No active calls</p>
+                                
+                                <div class="mt-4">
+                                    <div class="flex justify-between text-sm text-gray-600 mb-1">
+                                        <span>Progress</span>
+                                        <span id="progressPercent">0%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div id="progressBar" class="bg-blue-600 h-2 rounded-full" style="width: 0%"></div>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1" id="progressText">0 of 0 leads processed</p>
+                                </div>
+
+                                <div class="mt-4">
+                                    <h4 class="text-sm font-medium text-gray-700 mb-2">Recent Outcomes</h4>
+                                    <div class="space-y-1 text-sm">
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Interested</span>
+                                            <span id="interestedCount">-</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Not Interested</span>
+                                            <span id="notInterestedCount">-</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Voicemail</span>
+                                            <span id="voicemailCount">-</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <i data-lucide="phone" class="w-8 h-8 text-red-500"></i>
                         </div>
                     </div>
                 </div>
 
-                <!-- Upload Section -->
-                <div id="uploadSection" class="bg-white p-6 rounded-lg shadow mb-8" style="display: none;">
-                    <h3 class="text-lg font-semibold mb-4">Upload Leads</h3>
-                    <form id="uploadForm" class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">CSV File</label>
-                            <input type="file" id="csvFile" accept=".csv" class="block w-full border border-gray-300 rounded-lg px-3 py-2">
+                <!-- Campaigns Page -->
+                <div id="campaignsPage" class="page" style="display: none;">
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b">
+                            <h3 class="text-lg font-semibold">Campaign History</h3>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Prompt</label>
-                            <select id="promptSelect" class="block w-full border border-gray-300 rounded-lg px-3 py-2">
-                                <option value="default">Default Sales Script</option>
-                                <option value="followup">Follow-up Script</option>
-                                <option value="demo">Demo Request Script</option>
-                            </select>
+                        <div class="p-6">
+                            <p class="text-gray-500">No campaigns yet. Start your first campaign from the dashboard.</p>
                         </div>
-                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
-                            Upload Leads
-                        </button>
-                    </form>
+                    </div>
                 </div>
 
-                <!-- Calls Table -->
-                <div class="bg-white rounded-lg shadow">
-                    <div class="p-6 border-b">
-                        <h3 class="text-lg font-semibold">Recent Calls</h3>
+                <!-- Leads Page -->
+                <div id="leadsPage" class="page" style="display: none;">
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b flex justify-between items-center">
+                            <h3 class="text-lg font-semibold">Leads Management</h3>
+                            <button id="uploadLeadsBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                                <i data-lucide="upload" class="w-4 h-4 mr-2 inline"></i>
+                                Upload Leads
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="leadsTable" class="divide-y divide-gray-200">
+                                    <tr>
+                                        <td colspan="4" class="px-6 py-8 text-center text-gray-500">
+                                            No leads uploaded yet.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Outcome</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Transcript</th>
-                                </tr>
-                            </thead>
-                            <tbody id="callsTable" class="divide-y divide-gray-200">
-                                <tr>
-                                    <td colspan="4" class="px-6 py-8 text-center text-gray-500">
-                                        No calls yet. Upload leads and start a campaign to see results.
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                </div>
+
+                <!-- Prompts Page -->
+                <div id="promptsPage" class="page" style="display: none;">
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b">
+                            <h3 class="text-lg font-semibold">Call Scripts & Prompts</h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h4 class="font-medium mb-2">Default Sales Script</h4>
+                                <p class="text-gray-600 text-sm mb-4">Hi, this is Alex from Luma. Quick question—are you happy with how many qualified leads you're getting each month?</p>
+                                <button class="text-blue-600 hover:text-blue-800 text-sm">Edit Script</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Page -->
+                <div id="settingsPage" class="page" style="display: none;">
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b">
+                            <h3 class="text-lg font-semibold">Settings</h3>
+                        </div>
+                        <div class="p-6 space-y-6">
+                            <div>
+                                <h4 class="font-medium mb-4">API Configuration</h4>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Bland.ai API Key</label>
+                                        <input type="password" class="w-full border border-gray-300 rounded-lg px-3 py-2" value="••••••••••••••••" readonly>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Voice ID</label>
+                                        <input type="text" class="w-full border border-gray-300 rounded-lg px-3 py-2" value="Professional Male" readonly>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Webhook URL</label>
+                                        <input type="text" class="w-full border border-gray-300 rounded-lg px-3 py-2" value="https://callninja.replit.app/webhook" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calls Table (shown on Dashboard) -->
+                <div id="recentCallsSection" class="mt-8">
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b">
+                            <h3 class="text-lg font-semibold">Recent Calls</h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Outcome</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Transcript</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="callsTable" class="divide-y divide-gray-200">
+                                    <tr>
+                                        <td colspan="4" class="px-6 py-8 text-center text-gray-500">
+                                            No calls yet. Upload leads and start a campaign to see results.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upload Modal -->
+                <div id="uploadModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
+                    <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+                        <h3 class="text-lg font-semibold mb-4">Upload Leads</h3>
+                        <form id="uploadForm" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">CSV File</label>
+                                <input type="file" id="csvFile" accept=".csv" class="block w-full border border-gray-300 rounded-lg px-3 py-2">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Prompt</label>
+                                <select id="promptSelect" class="block w-full border border-gray-300 rounded-lg px-3 py-2">
+                                    <option value="default">Default Sales Script</option>
+                                </select>
+                            </div>
+                            <div class="flex justify-end space-x-3">
+                                <button type="button" id="cancelUpload" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+                                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                                    Upload Leads
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </main>
@@ -146,19 +339,41 @@
         lucide.createIcons();
         
         // Navigation
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => page.style.display = 'none');
+            
+            // Show selected page
+            document.getElementById(pageId + 'Page').style.display = 'block';
+            
+            // Show/hide recent calls section only on dashboard
+            const recentCallsSection = document.getElementById('recentCallsSection');
+            if (pageId === 'dashboard') {
+                recentCallsSection.style.display = 'block';
+            } else {
+                recentCallsSection.style.display = 'none';
+            }
+        }
+        
         document.querySelectorAll('.nav-link').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
-                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active', 'text-blue-600', 'bg-blue-50'));
-                document.querySelectorAll('.nav-link').forEach(l => l.classList.add('text-gray-600'));
+                
+                // Update nav styling
+                document.querySelectorAll('.nav-link').forEach(l => {
+                    l.classList.remove('active', 'text-blue-600', 'bg-blue-50');
+                    l.classList.add('text-gray-600');
+                });
                 link.classList.add('active', 'text-blue-600', 'bg-blue-50');
                 link.classList.remove('text-gray-600');
                 
-                const href = link.getAttribute('href');
-                if (href === '#upload') {
-                    document.getElementById('uploadSection').style.display = 'block';
-                } else {
-                    document.getElementById('uploadSection').style.display = 'none';
+                // Show appropriate page
+                const href = link.getAttribute('href').substring(1); // Remove #
+                showPage(href);
+                
+                // Load page-specific data
+                if (href === 'leads') {
+                    loadLeads();
                 }
             });
         });
@@ -268,10 +483,73 @@
             }
         }
 
+        // Modal functionality
+        function showUploadModal() {
+            document.getElementById('uploadModal').classList.remove('hidden');
+            document.getElementById('uploadModal').classList.add('flex');
+        }
+        
+        function hideUploadModal() {
+            document.getElementById('uploadModal').classList.add('hidden');
+            document.getElementById('uploadModal').classList.remove('flex');
+        }
+        
+        // Upload button handlers
+        document.getElementById('uploadLeadsBtn').addEventListener('click', showUploadModal);
+        document.getElementById('cancelUpload').addEventListener('click', hideUploadModal);
+        
+        // Load leads data
+        async function loadLeads() {
+            try {
+                const response = await fetch('/api/leads');
+                const leads = await response.json();
+                
+                const tbody = document.getElementById('leadsTable');
+                if (leads.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="px-6 py-8 text-center text-gray-500">
+                                No leads uploaded yet.
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    tbody.innerHTML = leads.map(lead => `
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${lead.phone}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${lead.company || 'N/A'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${lead.contact || 'N/A'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(lead.status)}">
+                                    ${lead.status || 'pending'}
+                                </span>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Failed to load leads:', error);
+            }
+        }
+        
+        function getStatusColor(status) {
+            switch(status) {
+                case 'completed': return 'bg-green-100 text-green-800';
+                case 'calling': return 'bg-blue-100 text-blue-800';
+                case 'failed': return 'bg-red-100 text-red-800';
+                case 'pending': return 'bg-yellow-100 text-yellow-800';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        }
+
         // Auto-refresh data
         setInterval(() => {
             loadStats();
             loadCalls();
+            // Refresh leads if on leads page
+            if (document.getElementById('leadsPage').style.display !== 'none') {
+                loadLeads();
+            }
         }, 10000);
 
         // Initial load

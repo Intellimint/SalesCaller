@@ -1,0 +1,9 @@
+Hi {contact}, this is Michael from SalesDialer. I hope I'm catching you at a good time.
+
+I wanted to reach out because I noticed {company} might benefit from our AI-powered outbound calling solution that's been helping companies increase their sales productivity by over 40%.
+
+We've worked with companies similar to {company} to automate their lead qualification process, which typically saves them 15-20 hours per week while improving contact rates.
+
+Would you be interested in learning more about how this could work for {company}? I could show you a quick 5-minute demo of the platform.
+
+What would be the best way to follow up with you?

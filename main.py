@@ -46,6 +46,11 @@ async def init_db():
             outcome TEXT,
             transcript TEXT,
             duration INTEGER,
+            conversion_flag INTEGER DEFAULT 0,
+            sentiment TEXT,
+            objection TEXT,
+            interest_level TEXT,
+            summary TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (lead_id) REFERENCES leads (id)
         )

@@ -221,6 +221,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test single call
+  app.post("/api/test-call", async (req, res) => {
+    try {
+      const { phone, contact, company, promptName, voiceId } = req.body;
+
+      if (!phone) {
+        return res.status(400).json({ message: "Phone number is required" });
+      }
+
+      // Create a test lead
+      const leadData = {
+        phone: phone.replace(/\D/g, '').replace(/^1/, '+1'), // Clean and format phone
+        contact: contact || "Test Contact",
+        company: company || "Test Company", 
+        status: "pending",
+        promptName: promptName || "default",
+      };
+
+      const validatedLead = insertLeadSchema.parse(leadData);
+      const lead = await storage.createLead(validatedLead);
+
+      // Make the call immediately
+      try {
+        const prompt = await getPromptForLead(lead);
+        const blandCallId = await createBlandCall(lead.phone, prompt, voiceId || undefined);
+        
+        // Update lead status and create call record
+        await storage.updateLeadStatus(lead.id, "dialing");
+        await storage.createCall({
+          leadId: lead.id,
+          blandCallId,
+          outcome: null,
+          transcript: null,
+          duration: null,
+        });
+
+        res.json({ 
+          message: "Test call initiated successfully",
+          leadId: lead.id,
+          callId: blandCallId 
+        });
+      } catch (callError) {
+        console.error("Failed to create test call:", callError);
+        await storage.updateLeadStatus(lead.id, "done");
+        res.status(500).json({ 
+          message: "Failed to initiate call",
+          error: callError instanceof Error ? callError.message : "Unknown error"
+        });
+      }
+    } catch (error) {
+      console.error("Test call error:", error);
+      res.status(500).json({ message: "Failed to process test call request" });
+    }
+  });
+
   // Get calls
   app.get("/api/calls", async (req, res) => {
     try {

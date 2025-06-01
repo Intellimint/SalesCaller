@@ -19,16 +19,20 @@ export default function Prompts() {
   const [editedContent, setEditedContent] = useState("");
   const { toast } = useToast();
 
-  const { data: prompts } = useQuery({
+  const { data: prompts, isLoading } = useQuery({
     queryKey: ["/api/prompts"],
+    refetchOnMount: true,
   });
 
   const createPromptMutation = useMutation({
     mutationFn: async ({ name, content }: { name: string; content: string }) => {
-      return apiRequest(`/api/prompts/${name}`, {
+      const response = await fetch(`/api/prompts/${name}`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content }),
       });
+      if (!response.ok) throw new Error(await response.text());
+      return response.json();
     },
     onSuccess: () => {
       toast({ title: "Success", description: "Prompt created successfully" });
@@ -48,10 +52,13 @@ export default function Prompts() {
 
   const updatePromptMutation = useMutation({
     mutationFn: async ({ name, content }: { name: string; content: string }) => {
-      return apiRequest(`/api/prompts/${name}`, {
+      const response = await fetch(`/api/prompts/${name}`, {
         method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content }),
       });
+      if (!response.ok) throw new Error(await response.text());
+      return response.json();
     },
     onSuccess: () => {
       toast({ title: "Success", description: "Prompt updated successfully" });
@@ -69,9 +76,11 @@ export default function Prompts() {
 
   const deletePromptMutation = useMutation({
     mutationFn: async (name: string) => {
-      return apiRequest(`/api/prompts/${name}`, {
+      const response = await fetch(`/api/prompts/${name}`, {
         method: "DELETE",
       });
+      if (!response.ok) throw new Error(await response.text());
+      return response.json();
     },
     onSuccess: () => {
       toast({ title: "Success", description: "Prompt deleted successfully" });

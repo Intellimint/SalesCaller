@@ -287,11 +287,14 @@
                                                 <p class="text-sm text-gray-600">File: demo.txt</p>
                                             </div>
                                             <div class="flex space-x-2">
-                                                <button class="p-2 text-gray-400 hover:text-gray-600" title="Preview">
+                                                <button class="p-2 text-gray-400 hover:text-gray-600" title="Preview" onclick="viewPrompt('demo')">
                                                     <i data-lucide="eye" class="w-4 h-4"></i>
                                                 </button>
-                                                <button class="p-2 text-gray-400 hover:text-gray-600" title="Edit">
+                                                <button class="p-2 text-gray-400 hover:text-gray-600" title="Edit" onclick="editPrompt('demo')">
                                                     <i data-lucide="edit" class="w-4 h-4"></i>
+                                                </button>
+                                                <button class="p-2 text-red-400 hover:text-red-600" title="Delete" onclick="deletePrompt('demo')">
+                                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
                                                 </button>
                                             </div>
                                         </div>
@@ -304,11 +307,14 @@
                                                 <p class="text-sm text-gray-600">File: followup.txt</p>
                                             </div>
                                             <div class="flex space-x-2">
-                                                <button class="p-2 text-gray-400 hover:text-gray-600" title="Preview">
+                                                <button class="p-2 text-gray-400 hover:text-gray-600" title="Preview" onclick="viewPrompt('followup')">
                                                     <i data-lucide="eye" class="w-4 h-4"></i>
                                                 </button>
-                                                <button class="p-2 text-gray-400 hover:text-gray-600" title="Edit">
+                                                <button class="p-2 text-gray-400 hover:text-gray-600" title="Edit" onclick="editPrompt('followup')">
                                                     <i data-lucide="edit" class="w-4 h-4"></i>
+                                                </button>
+                                                <button class="p-2 text-red-400 hover:text-red-600" title="Delete" onclick="deletePrompt('followup')">
+                                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
                                                 </button>
                                             </div>
                                         </div>
@@ -1299,6 +1305,178 @@
                 lucide.createIcons();
             }
         }
+
+        // Prompts functionality
+        let currentPrompt = null;
+
+        function showCreatePromptDialog() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4">
+                    <div class="flex items-center justify-between p-6 border-b">
+                        <h3 class="text-lg font-semibold">Create New Prompt</h3>
+                        <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-gray-600">
+                            <i data-lucide="x" class="w-6 h-6"></i>
+                        </button>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Prompt Name</label>
+                            <input type="text" id="newPromptName" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="Enter prompt name">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Content</label>
+                            <textarea id="newPromptContent" class="w-full border border-gray-300 rounded-lg px-3 py-2 h-64" placeholder="Enter prompt content"></textarea>
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-2 p-6 border-t">
+                        <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">Cancel</button>
+                        <button onclick="createNewPrompt()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Create</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+
+        async function createNewPrompt() {
+            const name = document.getElementById('newPromptName').value.trim().toLowerCase();
+            const content = document.getElementById('newPromptContent').value.trim();
+            
+            if (!name || !content) {
+                alert('Please fill in both name and content');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/prompts/${name}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content })
+                });
+                
+                if (response.ok) {
+                    alert('Prompt created successfully');
+                    document.querySelector('.fixed').remove();
+                    location.reload(); // Refresh to show new prompt
+                } else {
+                    const error = await response.text();
+                    alert('Failed to create prompt: ' + error);
+                }
+            } catch (error) {
+                alert('Failed to create prompt: ' + error.message);
+            }
+        }
+
+        async function viewPrompt(promptName) {
+            try {
+                const response = await fetch(`/api/prompts/${promptName}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    currentPrompt = data;
+                    
+                    const editor = document.getElementById('promptEditor');
+                    const title = document.getElementById('promptEditorTitle');
+                    const content = document.getElementById('promptContent');
+                    
+                    if (editor && title && content) {
+                        title.textContent = `View "${data.name}"`;
+                        content.value = data.content;
+                        content.readOnly = true;
+                        
+                        document.getElementById('editPromptBtn').style.display = 'inline-flex';
+                        document.getElementById('savePromptBtn').style.display = 'none';
+                        document.getElementById('cancelEditBtn').style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                alert('Failed to load prompt: ' + error.message);
+            }
+        }
+
+        async function editPrompt(promptName) {
+            await viewPrompt(promptName);
+            
+            const content = document.getElementById('promptContent');
+            const title = document.getElementById('promptEditorTitle');
+            
+            if (content && title && currentPrompt) {
+                title.textContent = `Edit "${currentPrompt.name}"`;
+                content.readOnly = false;
+                
+                document.getElementById('editPromptBtn').style.display = 'none';
+                document.getElementById('savePromptBtn').style.display = 'inline-flex';
+                document.getElementById('cancelEditBtn').style.display = 'inline-flex';
+            }
+        }
+
+        async function savePrompt() {
+            if (!currentPrompt) return;
+            
+            const content = document.getElementById('promptContent').value.trim();
+            if (!content) {
+                alert('Content cannot be empty');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/prompts/${currentPrompt.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content })
+                });
+                
+                if (response.ok) {
+                    alert('Prompt updated successfully');
+                    await viewPrompt(currentPrompt.id);
+                } else {
+                    const error = await response.text();
+                    alert('Failed to update prompt: ' + error);
+                }
+            } catch (error) {
+                alert('Failed to update prompt: ' + error.message);
+            }
+        }
+
+        function cancelEdit() {
+            if (currentPrompt) {
+                viewPrompt(currentPrompt.id);
+            }
+        }
+
+        async function deletePrompt(promptName) {
+            if (!confirm(`Are you sure you want to delete the "${promptName}" prompt?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/prompts/${promptName}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert('Prompt deleted successfully');
+                    location.reload(); // Refresh to remove deleted prompt
+                } else {
+                    const error = await response.text();
+                    alert('Failed to delete prompt: ' + error);
+                }
+            } catch (error) {
+                alert('Failed to delete prompt: ' + error.message);
+            }
+        }
+
+        // Add event listener for create prompt button
+        document.addEventListener('DOMContentLoaded', function() {
+            const createBtn = document.getElementById('createPromptBtn');
+            if (createBtn) {
+                createBtn.addEventListener('click', showCreatePromptDialog);
+            }
+        });
     </script>
 </body>
 </html>

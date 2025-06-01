@@ -1,9 +1,0 @@
-Hi {contact}, this is Alex from SalesDialer following up on our previous conversation about {company}.
-
-I wanted to circle back and see if you've had a chance to think about the automated calling solution we discussed. I know you mentioned that your team is spending a lot of time on manual outreach.
-
-Since we last spoke, I've been thinking about {company} specifically and I believe our AI calling system could help you increase your qualified leads by at least 40% while reducing your team's workload.
-
-I have a few time slots available this week for a quick 15-minute call to answer any questions you might have and show you exactly how this would work for {company}.
-
-Would Thursday at 2 PM or Friday at 10 AM work better for your schedule?

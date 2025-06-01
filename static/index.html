@@ -1322,15 +1322,19 @@
                     currentPrompt = data;
                     
                     const editor = document.getElementById('promptEditor');
-                    const title = document.getElementById('promptEditorTitle');
+                    const details = document.getElementById('promptDetails');
+                    const title = document.getElementById('selectedPromptTitle');
                     const content = document.getElementById('promptContent');
                     
-                    if (editor && title && content) {
-                        title.textContent = `View "${data.name}"`;
+                    if (editor && details && title && content) {
+                        title.textContent = `${data.name}`;
                         content.value = data.content;
                         content.readOnly = true;
                         
-                        document.getElementById('editPromptBtn').style.display = 'inline-flex';
+                        details.style.display = 'none';
+                        editor.style.display = 'block';
+                        
+                        document.getElementById('editPromptBtn').style.display = 'inline-block';
                         document.getElementById('savePromptBtn').style.display = 'none';
                         document.getElementById('cancelEditBtn').style.display = 'none';
                     }
@@ -1344,15 +1348,15 @@
             await viewPrompt(promptName);
             
             const content = document.getElementById('promptContent');
-            const title = document.getElementById('promptEditorTitle');
+            const title = document.getElementById('selectedPromptTitle');
             
             if (content && title && currentPrompt) {
                 title.textContent = `Edit "${currentPrompt.name}"`;
                 content.readOnly = false;
                 
                 document.getElementById('editPromptBtn').style.display = 'none';
-                document.getElementById('savePromptBtn').style.display = 'inline-flex';
-                document.getElementById('cancelEditBtn').style.display = 'inline-flex';
+                document.getElementById('savePromptBtn').style.display = 'inline-block';
+                document.getElementById('cancelEditBtn').style.display = 'inline-block';
             }
         }
 
@@ -1455,11 +1459,35 @@
             }
         }
 
-        // Add event listener for create prompt button
+        // Add event listeners
         document.addEventListener('DOMContentLoaded', function() {
             const createBtn = document.getElementById('createPromptBtn');
+            const editBtn = document.getElementById('editPromptBtn');
+            const saveBtn = document.getElementById('savePromptBtn');
+            const cancelBtn = document.getElementById('cancelEditBtn');
+            
             if (createBtn) {
                 createBtn.addEventListener('click', showCreatePromptDialog);
+            }
+            
+            if (editBtn) {
+                editBtn.addEventListener('click', function() {
+                    if (currentPrompt) {
+                        editPrompt(currentPrompt.id);
+                    }
+                });
+            }
+            
+            if (saveBtn) {
+                saveBtn.addEventListener('click', savePrompt);
+            }
+            
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', function() {
+                    if (currentPrompt) {
+                        viewPrompt(currentPrompt.id); // Reset to view mode
+                    }
+                });
             }
             
             // Load prompts when page loads and when prompts tab is selected

@@ -367,6 +367,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get specific prompt content
+  app.get("/api/prompts/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const promptPath = path.join(process.cwd(), 'prompts', `${id}.txt`);
+      
+      let content: string;
+      try {
+        content = await fs.readFile(promptPath, 'utf-8');
+      } catch (error) {
+        // Fallback to default if prompt file doesn't exist
+        content = await fs.readFile(path.join(process.cwd(), 'prompts', 'default.txt'), 'utf-8');
+      }
+      
+      const promptInfo = {
+        id,
+        name: id === "default" ? "Default Sales Script" : 
+              id === "followup" ? "Follow-up Script" : 
+              id === "demo" ? "Demo Request Script" : id,
+        filename: `${id}.txt`,
+        content
+      };
+      
+      res.json(promptInfo);
+    } catch (error) {
+      console.error("Get prompt content error:", error);
+      res.status(500).json({ message: "Failed to get prompt content" });
+    }
+  });
+
   // Health check endpoint
   app.get("/api/health", async (req, res) => {
     try {

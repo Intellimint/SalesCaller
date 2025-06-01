@@ -1,0 +1,304 @@
+Below is a **step-by-step build brief for Replit Agent** that will turn the current placeholder UI into a fully-working, always-on mini-SaaS.
+Copy the block verbatim into Replit Agent.
+
+---
+
+### 📋 REPLIT AGENT – NEXT SPRINT SPEC
+
+The repo now has static pages but no functioning backend.
+Implement the following to wire up the full stack.
+
+---
+
+## 1 · Database Layer (SQLite + aiosqlite)
+
+1. **Create `db/schema.sql`**
+
+```sql
+CREATE TABLE IF NOT EXISTS leads (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  phone TEXT NOT NULL,
+  company TEXT,
+  contact TEXT,
+  prompt_name TEXT DEFAULT 'default',
+  status TEXT DEFAULT 'pending',   -- pending | dialing | done | error
+  bland_call_id TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS calls (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  lead_id INTEGER,
+  outcome TEXT,                   -- voicemail | interested | not_interested | no_answer
+  transcript TEXT,
+  duration INTEGER,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (lead_id) REFERENCES leads(id)
+);
+```
+
+2. **Add `db/db.py`**
+
+```python
+import aiosqlite, os, pathlib, asyncio
+
+DB_PATH = pathlib.Path("data.db")
+
+async def init_db():
+    async with aiosqlite.connect(DB_PATH) as db:
+        with open("db/schema.sql") as f:
+            await db.executescript(f.read())
+        await db.commit()
+
+async def get_db():
+    return await aiosqlite.connect(DB_PATH, isolation_level=None)
+```
+
+Call `await init_db()` once on startup in `main.py`.
+
+---
+
+## 2 · Backend API (FastAPI + asyncio scheduler)
+
+### 2.1 File layout
+
+```
+backend/
+├── main.py           ← FastAPI app + background scheduler
+├── calls/
+│   ├── call_engine.py
+│   └── webhook.py
+├── prompts/
+│   ├── default.txt
+│   └── followup.txt
+└── db/
+    ├── schema.sql
+    └── db.py
+```
+
+### 2.2 `backend/main.py`
+
+```python
+import os, asyncio, csv, io
+import uvicorn
+from fastapi import FastAPI, UploadFile, Form, BackgroundTasks
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from calls.call_engine import create_call
+from calls.webhook import webhook_router
+from db.db import init_db, get_db
+
+app = FastAPI()
+app.include_router(webhook_router, prefix="/webhook")
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
+
+QUEUE = asyncio.Queue()
+CONCURRENCY = int(os.getenv("CONCURRENCY", 3))
+CALLERS = []
+
+@app.on_event("startup")
+async def startup():
+    await init_db()
+    for _ in range(CONCURRENCY):
+        CALLERS.append(asyncio.create_task(worker()))
+
+async def worker():
+    while True:
+        lead_id = await QUEUE.get()
+        await create_call(lead_id)
+        QUEUE.task_done()
+
+@app.post("/api/upload-leads")
+async def upload_leads(file: UploadFile, prompt_name: str = Form("default")):
+    db = await get_db()
+    content = (await file.read()).decode()
+    reader = csv.DictReader(io.StringIO(content))
+    async with db:
+        for row in reader:
+            await db.execute(
+                "INSERT INTO leads (phone, company, contact, prompt_name) VALUES (?,?,?,?)",
+                (row["phone"], row.get("company"), row.get("contact"), prompt_name)
+            )
+    return {"status": "ok"}
+
+@app.post("/api/start")
+async def start_calls():
+    db = await get_db()
+    async with db.execute("SELECT id FROM leads WHERE status='pending'") as cur:
+        async for (lead_id,) in cur:
+            await QUEUE.put(lead_id)
+            await db.execute("UPDATE leads SET status='dialing' WHERE id=?", (lead_id,))
+    return {"queued": QUEUE.qsize()}
+
+@app.get("/api/calls")
+async def list_calls():
+    db = await get_db()
+    async with db.execute("""
+        SELECT leads.phone, leads.company, calls.outcome, calls.transcript
+        FROM calls JOIN leads ON calls.lead_id = leads.id
+        ORDER BY calls.created_at DESC LIMIT 100
+    """) as cur:
+        rows = await cur.fetchall()
+    return [dict(zip(("phone","company","outcome","transcript"), r)) for r in rows]
+
+if __name__ == "__main__":
+    uvicorn.run("backend.main:app", host="0.0.0.0", port=3000, reload=True)
+```
+
+---
+
+## 3 · Call Engine (`calls/call_engine.py`)
+
+```python
+import os, httpx, json
+from db.db import get_db
+from .prompt_utils import render_prompt
+
+API_KEY = os.getenv("BLAND_API_KEY")
+VOICE_ID = os.getenv("VOICE_ID")
+CALLBACK_URL = os.getenv("CALLBACK_URL")
+
+async def create_call(lead_id: int):
+    db = await get_db()
+    async with db.execute("SELECT phone, company, contact, prompt_name FROM leads WHERE id=?", (lead_id,)) as cur:
+        phone, company, contact, prompt_name = await cur.fetchone()
+
+    prompt = await render_prompt(prompt_name, dict(company=company, contact=contact))
+
+    payload = {
+        "phone_number": phone,
+        "task": prompt,
+        "model": "base",
+        "voice_id": VOICE_ID,
+        "callback_url": CALLBACK_URL
+    }
+    headers = {"Authorization": API_KEY}
+
+    async with httpx.AsyncClient(timeout=60) as client:
+        r = await client.post("https://api.bland.ai/v1/calls", json=payload, headers=headers)
+        if r.status_code == 200:
+            call_id = r.json().get("call_id")
+            async with db:
+                await db.execute("UPDATE leads SET bland_call_id=? WHERE id=?", (call_id, lead_id))
+        else:
+            async with db:
+                await db.execute("UPDATE leads SET status='error' WHERE id=?", (lead_id,))
+```
+
+---
+
+## 4 · Webhook Router (`calls/webhook.py`)
+
+```python
+from fastapi import APIRouter, Request
+from db.db import get_db
+
+webhook_router = APIRouter()
+
+@webhook_router.post("/")
+async def bland_webhook(req: Request):
+    payload = await req.json()
+    call_id = payload.get("call_id")
+    outcome  = payload.get("status")         # map as needed
+    transcript = payload.get("transcript", "")
+    duration = payload.get("duration", 0)
+
+    db = await get_db()
+    async with db.execute("SELECT id FROM leads WHERE bland_call_id=?", (call_id,)) as cur:
+        res = await cur.fetchone()
+    if res:
+        lead_id = res[0]
+        async with db:
+            await db.execute(
+                "INSERT INTO calls (lead_id, outcome, transcript, duration) VALUES (?,?,?,?)",
+                (lead_id, outcome, transcript, duration)
+            )
+            await db.execute("UPDATE leads SET status='done' WHERE id=?", (lead_id,))
+    return {"ok": True}
+```
+
+---
+
+## 5 · Prompt Utils (`calls/prompt_utils.py`)
+
+```python
+from string import Template
+import pathlib, asyncio
+
+PROMPT_DIR = pathlib.Path("prompts")
+
+async def render_prompt(name: str, context: dict):
+    path = PROMPT_DIR / f"{name}.txt"
+    tmpl = Template(path.read_text())
+    return tmpl.safe_substitute(context)
+```
+
+---
+
+## 6 · Static Front-End (quick version)
+
+`static/index.html`
+
+* File input + prompt dropdown
+* JS `fetch('/api/upload-leads', {method:'POST', body:FormData})`
+
+`static/dashboard.html`
+
+* JS fetch `/api/calls` every 10 s → build table
+
+Add a **Start** button calling `POST /api/start`.
+
+*(Optional: add Tailwind or Bootstrap for styling.)*
+
+---
+
+## 7 · Replit Config
+
+### `replit.nix`
+
+```nix
+{ pkgs }: {
+  deps = [
+    pkgs.python311
+    pkgs.python311Packages.fastapi
+    pkgs.python311Packages.uvicorn
+    pkgs.python311Packages.httpx
+    pkgs.python311Packages.aiosqlite
+    pkgs.python311Packages.python-dotenv
+    pkgs.sqlite
+  ];
+}
+```
+
+### `.replit`
+
+```
+run = "python backend/main.py"
+```
+
+---
+
+## 8 · Secrets to add via Replit UI
+
+```
+BLAND_API_KEY=sk-***
+VOICE_ID=123
+CALLBACK_URL=https://<your-repl>.replit.app/webhook
+CONCURRENCY=3
+```
+
+---
+
+### ✅ Acceptance Test
+
+1. Add your phone in `sample_leads.csv`.
+2. Upload via UI, choose default prompt.
+3. Click **Start**.
+4. You should receive a call; converse, hang up.
+5. Dashboard row shows outcome + transcript.
+
+After this sprint, the product is “end-to-end functional” and ready for design partners.
+
+---
+
+**End of instructions** – Replit Agent should implement all tasks above.

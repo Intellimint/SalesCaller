@@ -1,9 +1,13 @@
-Hi {contact}, this is Sarah from SalesDialer calling about the demo you requested.
+Hi $contact, this is Sarah from SalesDialer. I hope you're having a great day!
 
-Thank you for your interest in learning how {company} can automate your outbound calling process. I have a personalized demo prepared specifically for {company}.
+I'm reaching out to $company because I believe you'd be interested in seeing a live demonstration of our AI calling platform that's helping businesses like yours scale their outreach efforts.
 
-The demo takes about 10 minutes and I'll show you exactly how our AI handles lead qualification, appointment setting, and follow-up sequences - all the things that typically take your team hours each day.
+What makes this particularly relevant for $company is that our system can:
+- Handle initial prospect conversations automatically
+- Qualify leads before they reach your sales team
+- Scale your outreach without adding headcount
+- Maintain consistent messaging across all calls
 
-I can see that {company} would particularly benefit from our automated lead scoring and CRM integration features.
+I'd love to show you a 15-minute demo of exactly how this works. You'll see the platform in action, and I can answer any questions you have about implementation.
 
-Are you available now for the demo, or would you prefer I schedule it for a specific time that works better for your calendar?
+Would you be available for a brief demo call this week? I have some flexibility in my schedule and can work around yours.

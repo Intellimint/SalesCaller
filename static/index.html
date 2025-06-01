@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SalesDialer - AI Outbound Calling</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        <div class="w-64 bg-white shadow-lg">
+            <div class="p-6">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <i data-lucide="phone" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900">SalesDialer</h1>
+                        <p class="text-sm text-gray-500">AI Outbound Calling</p>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="mt-6">
+                <a href="#dashboard" class="nav-link active flex items-center px-6 py-3 text-blue-600 bg-blue-50">
+                    <i data-lucide="bar-chart-3" class="w-5 h-5 mr-3"></i>
+                    Dashboard
+                </a>
+                <a href="#upload" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
+                    <i data-lucide="upload" class="w-5 h-5 mr-3"></i>
+                    Upload Leads
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col">
+            <header class="bg-white border-b px-6 py-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-semibold text-gray-900">Campaign Dashboard</h2>
+                        <p class="text-gray-600">Monitor and manage your outbound calling campaigns</p>
+                    </div>
+                    <button id="startCampaign" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center">
+                        <i data-lucide="play" class="w-4 h-4 mr-2"></i>
+                        Start Campaign
+                    </button>
+                </div>
+            </header>
+
+            <main class="flex-1 p-6">
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Total Leads</p>
+                                <p id="totalLeads" class="text-2xl font-bold text-gray-900">0</p>
+                            </div>
+                            <i data-lucide="users" class="w-8 h-8 text-blue-500"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Calls Made</p>
+                                <p id="callsMade" class="text-2xl font-bold text-gray-900">0</p>
+                            </div>
+                            <i data-lucide="phone-call" class="w-8 h-8 text-green-500"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Success Rate</p>
+                                <p id="successRate" class="text-2xl font-bold text-gray-900">0%</p>
+                            </div>
+                            <i data-lucide="trending-up" class="w-8 h-8 text-purple-500"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Active Calls</p>
+                                <p id="activeCalls" class="text-2xl font-bold text-gray-900">0</p>
+                            </div>
+                            <i data-lucide="phone" class="w-8 h-8 text-red-500"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upload Section -->
+                <div id="uploadSection" class="bg-white p-6 rounded-lg shadow mb-8" style="display: none;">
+                    <h3 class="text-lg font-semibold mb-4">Upload Leads</h3>
+                    <form id="uploadForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">CSV File</label>
+                            <input type="file" id="csvFile" accept=".csv" class="block w-full border border-gray-300 rounded-lg px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Prompt</label>
+                            <select id="promptSelect" class="block w-full border border-gray-300 rounded-lg px-3 py-2">
+                                <option value="default">Default Sales Script</option>
+                                <option value="followup">Follow-up Script</option>
+                                <option value="demo">Demo Request Script</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                            Upload Leads
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Calls Table -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="p-6 border-b">
+                        <h3 class="text-lg font-semibold">Recent Calls</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Outcome</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Transcript</th>
+                                </tr>
+                            </thead>
+                            <tbody id="callsTable" class="divide-y divide-gray-200">
+                                <tr>
+                                    <td colspan="4" class="px-6 py-8 text-center text-gray-500">
+                                        No calls yet. Upload leads and start a campaign to see results.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        
+        // Navigation
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active', 'text-blue-600', 'bg-blue-50'));
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.add('text-gray-600'));
+                link.classList.add('active', 'text-blue-600', 'bg-blue-50');
+                link.classList.remove('text-gray-600');
+                
+                const href = link.getAttribute('href');
+                if (href === '#upload') {
+                    document.getElementById('uploadSection').style.display = 'block';
+                } else {
+                    document.getElementById('uploadSection').style.display = 'none';
+                }
+            });
+        });
+
+        // File upload
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData();
+            const fileInput = document.getElementById('csvFile');
+            const promptSelect = document.getElementById('promptSelect');
+            
+            if (!fileInput.files[0]) {
+                alert('Please select a CSV file');
+                return;
+            }
+            
+            formData.append('file', fileInput.files[0]);
+            formData.append('prompt_name', promptSelect.value);
+            
+            try {
+                const response = await fetch('/api/upload-leads', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    alert('Leads uploaded successfully!');
+                    fileInput.value = '';
+                    loadStats();
+                } else {
+                    alert('Upload failed. Please try again.');
+                }
+            } catch (error) {
+                alert('Upload error: ' + error.message);
+            }
+        });
+
+        // Start campaign
+        document.getElementById('startCampaign').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/start', { method: 'POST' });
+                const data = await response.json();
+                alert(`Campaign started! ${data.queued} calls queued.`);
+                loadStats();
+                loadCalls();
+            } catch (error) {
+                alert('Failed to start campaign: ' + error.message);
+            }
+        });
+
+        // Load stats
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+                
+                document.getElementById('totalLeads').textContent = stats.totalLeads;
+                document.getElementById('callsMade').textContent = stats.callsMade;
+                document.getElementById('successRate').textContent = stats.successRate + '%';
+                document.getElementById('activeCalls').textContent = stats.activeCalls;
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+
+        // Load calls
+        async function loadCalls() {
+            try {
+                const response = await fetch('/api/calls');
+                const calls = await response.json();
+                
+                const tbody = document.getElementById('callsTable');
+                if (calls.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="px-6 py-8 text-center text-gray-500">
+                                No calls yet. Upload leads and start a campaign to see results.
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    tbody.innerHTML = calls.map(call => `
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${call.phone}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${call.company || 'N/A'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 text-xs font-medium rounded-full ${getOutcomeColor(call.outcome)}">
+                                    ${call.outcome || 'Unknown'}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">${call.transcript || 'No transcript'}</td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Failed to load calls:', error);
+            }
+        }
+
+        function getOutcomeColor(outcome) {
+            switch(outcome) {
+                case 'interested': return 'bg-green-100 text-green-800';
+                case 'not_interested': return 'bg-red-100 text-red-800';
+                case 'voicemail': return 'bg-yellow-100 text-yellow-800';
+                case 'no_answer': return 'bg-gray-100 text-gray-800';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        // Auto-refresh data
+        setInterval(() => {
+            loadStats();
+            loadCalls();
+        }, 10000);
+
+        // Initial load
+        loadStats();
+        loadCalls();
+    </script>
+</body>
+</html>

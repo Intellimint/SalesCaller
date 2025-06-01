@@ -44,6 +44,10 @@
                     <i data-lucide="file-text" class="w-5 h-5 mr-3"></i>
                     Prompts
                 </a>
+                <a href="#analytics" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
+                    <i data-lucide="bar-chart-3" class="w-5 h-5 mr-3"></i>
+                    Analytics
+                </a>
                 <a href="#settings" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
                     <i data-lucide="settings" class="w-5 h-5 mr-3"></i>
                     Settings
@@ -459,6 +463,119 @@
                     </div>
                 </div>
 
+                <!-- Analytics Page -->
+                <div id="analyticsPage" class="page" style="display: none;">
+                    <div class="mb-8">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h2 class="text-2xl font-bold text-gray-900 mb-2">Call Analytics</h2>
+                                <p class="text-gray-600">Performance insights and conversion patterns from your calling campaigns</p>
+                            </div>
+                            <button onclick="analyzeNewCalls()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                                <i data-lucide="refresh-cw" class="w-4 h-4 inline mr-2"></i>
+                                Analyze New Calls
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Key Metrics -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">Conversion Rate</p>
+                                    <p id="analyticsConversionRate" class="text-2xl font-bold text-green-600">0%</p>
+                                </div>
+                                <i data-lucide="trending-up" class="w-8 h-8 text-green-500"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">Avg Call Duration</p>
+                                    <p id="analyticsAvgDuration" class="text-2xl font-bold text-blue-600">0s</p>
+                                </div>
+                                <i data-lucide="clock" class="w-8 h-8 text-blue-500"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">Hot Leads</p>
+                                    <p id="analyticsHotLeads" class="text-2xl font-bold text-orange-600">0</p>
+                                </div>
+                                <i data-lucide="flame" class="w-8 h-8 text-orange-500"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-600">Positive Sentiment</p>
+                                    <p id="analyticsPositiveSentiment" class="text-2xl font-bold text-purple-600">0%</p>
+                                </div>
+                                <i data-lucide="smile" class="w-8 h-8 text-purple-500"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                        <!-- Conversion Trend -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">Conversion Trend (Last 30 Days)</h3>
+                            <canvas id="conversionChart" width="400" height="200"></canvas>
+                        </div>
+                        
+                        <!-- Objection Distribution -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">Common Objections</h3>
+                            <canvas id="objectionChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Interest & Sentiment Analysis -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                        <!-- Interest Level Distribution -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">Interest Level vs Call Duration</h3>
+                            <div id="interestLevelData" class="space-y-4">
+                                <!-- Interest level data will be populated here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Sentiment Analysis -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4">Sentiment vs Performance</h3>
+                            <div id="sentimentData" class="space-y-4">
+                                <!-- Sentiment data will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Call Performance Table -->
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b">
+                            <h3 class="text-lg font-semibold">Call Performance Insights</h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Calls</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Conversions</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rate</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Avg Duration</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="analyticsTableBody" class="divide-y divide-gray-200">
+                                    <!-- Analytics data will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Settings Page -->
                 <div id="settingsPage" class="page" style="display: none;">
                     <div class="bg-white rounded-lg shadow">
@@ -588,6 +705,8 @@
                     initializeTestCall();
                 } else if (href === 'dashboard' || href === 'campaigns') {
                     loadVoices();
+                } else if (href === 'analytics') {
+                    loadAnalytics();
                 }
             });
         });
@@ -995,6 +1114,147 @@
                 loadLeads();
             }
         }, 10000);
+
+        // Analytics functionality
+        async function loadAnalytics() {
+            try {
+                const response = await fetch('/api/analytics-stats');
+                const data = await response.json();
+                
+                updateAnalyticsMetrics(data);
+                updateAnalyticsData(data);
+            } catch (error) {
+                console.error('Failed to load analytics:', error);
+            }
+        }
+        
+        function updateAnalyticsMetrics(data) {
+            // Calculate overall metrics
+            let totalCalls = 0;
+            let totalConversions = 0;
+            let totalDuration = 0;
+            let hotLeads = 0;
+            let positiveSentiment = 0;
+            let totalSentimentCalls = 0;
+            
+            data.daily_stats.forEach(day => {
+                totalCalls += day.total_calls;
+                totalConversions += day.conversions;
+                totalDuration += day.avg_duration * day.total_calls;
+            });
+            
+            data.interest_levels.forEach(level => {
+                if (level.level === 'hot') {
+                    hotLeads = level.count;
+                }
+            });
+            
+            data.sentiment_stats.forEach(sentiment => {
+                totalSentimentCalls += sentiment.count;
+                if (sentiment.sentiment === 'positive') {
+                    positiveSentiment = sentiment.count;
+                }
+            });
+            
+            const conversionRate = totalCalls > 0 ? (totalConversions / totalCalls * 100).toFixed(1) : 0;
+            const avgDuration = totalCalls > 0 ? Math.round(totalDuration / totalCalls) : 0;
+            const positiveSentimentRate = totalSentimentCalls > 0 ? (positiveSentiment / totalSentimentCalls * 100).toFixed(1) : 0;
+            
+            document.getElementById('analyticsConversionRate').textContent = conversionRate + '%';
+            document.getElementById('analyticsAvgDuration').textContent = avgDuration + 's';
+            document.getElementById('analyticsHotLeads').textContent = hotLeads;
+            document.getElementById('analyticsPositiveSentiment').textContent = positiveSentimentRate + '%';
+        }
+        
+        function updateAnalyticsData(data) {
+            // Update interest level data
+            const interestLevelContainer = document.getElementById('interestLevelData');
+            if (interestLevelContainer) {
+                interestLevelContainer.innerHTML = data.interest_levels.map(level => {
+                    const conversionRate = level.count > 0 ? (level.conversions / level.count * 100).toFixed(1) : 0;
+                    const avgDuration = Math.round(level.avg_duration || 0);
+                    
+                    return `
+                        <div class="flex justify-between items-center p-3 border rounded-lg">
+                            <div>
+                                <span class="font-medium capitalize">${level.level} Interest</span>
+                                <p class="text-sm text-gray-600">${level.count} calls • ${avgDuration}s avg</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-lg font-bold ${level.level === 'hot' ? 'text-red-600' : level.level === 'warm' ? 'text-orange-600' : 'text-gray-600'}">${conversionRate}%</span>
+                                <p class="text-xs text-gray-500">conversion</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            // Update sentiment data
+            const sentimentContainer = document.getElementById('sentimentData');
+            if (sentimentContainer) {
+                sentimentContainer.innerHTML = data.sentiment_stats.map(sentiment => {
+                    const conversionRate = sentiment.count > 0 ? (sentiment.conversions / sentiment.count * 100).toFixed(1) : 0;
+                    const avgDuration = Math.round(sentiment.avg_duration || 0);
+                    
+                    return `
+                        <div class="flex justify-between items-center p-3 border rounded-lg">
+                            <div>
+                                <span class="font-medium capitalize">${sentiment.sentiment} Sentiment</span>
+                                <p class="text-sm text-gray-600">${sentiment.count} calls • ${avgDuration}s avg</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-lg font-bold ${sentiment.sentiment === 'positive' ? 'text-green-600' : sentiment.sentiment === 'negative' ? 'text-red-600' : 'text-gray-600'}">${conversionRate}%</span>
+                                <p class="text-xs text-gray-500">conversion</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            // Update analytics table
+            const tableBody = document.getElementById('analyticsTableBody');
+            if (tableBody) {
+                tableBody.innerHTML = data.daily_stats.map(day => {
+                    const conversionRate = day.total_calls > 0 ? (day.conversions / day.total_calls * 100).toFixed(1) : 0;
+                    const avgDuration = Math.round(day.avg_duration || 0);
+                    
+                    return `
+                        <tr>
+                            <td class="px-6 py-4 text-sm text-gray-900">${day.date}</td>
+                            <td class="px-6 py-4 text-sm text-gray-900">${day.total_calls}</td>
+                            <td class="px-6 py-4 text-sm text-gray-900">${day.conversions}</td>
+                            <td class="px-6 py-4 text-sm font-medium ${conversionRate > 5 ? 'text-green-600' : conversionRate > 2 ? 'text-orange-600' : 'text-red-600'}">${conversionRate}%</td>
+                            <td class="px-6 py-4 text-sm text-gray-900">${avgDuration}s</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+        
+        async function analyzeNewCalls() {
+            try {
+                const button = event.target.closest('button');
+                button.disabled = true;
+                button.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 inline mr-2 animate-spin"></i>Analyzing...';
+                
+                const response = await fetch('/api/analyze', { method: 'POST' });
+                const result = await response.json();
+                
+                alert(`Analyzed ${result.analyzed} new calls`);
+                loadAnalytics(); // Refresh analytics data
+                
+                button.disabled = false;
+                button.innerHTML = '<i data-lucide="refresh-cw" class="w-4 h-4 inline mr-2"></i>Analyze New Calls';
+                
+                // Re-initialize lucide icons
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            } catch (error) {
+                console.error('Failed to analyze calls:', error);
+                alert('Failed to analyze calls. Please try again.');
+            }
+        }
 
         // Initial load
         loadStats();

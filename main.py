@@ -420,6 +420,182 @@ async def send_booking_invite(data: dict):
     
     return {"success": True, "message": "Invite logged for manual follow-up"}
 
+@app.post("/api/analyze")
+async def analyze_calls():
+    """Background job to analyze untagged call transcripts"""
+    db = await get_db()
+    
+    # Get calls that need analysis (have transcript but no sentiment)
+    async with db.execute("""
+        SELECT id, transcript, duration, conversion_flag 
+        FROM calls 
+        WHERE transcript IS NOT NULL 
+        AND transcript != '' 
+        AND sentiment IS NULL
+        LIMIT 10
+    """) as cur:
+        calls_to_analyze = await cur.fetchall()
+    
+    analyzed_count = 0
+    
+    for call_row in calls_to_analyze:
+        call_id, transcript, duration, conversion_flag = call_row
+        
+        # Analyze transcript for patterns
+        sentiment = analyze_sentiment(transcript, duration)
+        objection = extract_objection(transcript)
+        interest_level = determine_interest_level(transcript, duration, conversion_flag)
+        
+        # Update database with analysis
+        await db.execute("""
+            UPDATE calls 
+            SET sentiment=?, objection=?, interest_level=? 
+            WHERE id=?
+        """, (sentiment, objection, interest_level, call_id))
+        
+        analyzed_count += 1
+    
+    await db.commit()
+    await db.close()
+    
+    return {"analyzed": analyzed_count}
+
+def analyze_sentiment(transcript: str, duration: int) -> str:
+    """Analyze sentiment based on transcript content and call duration"""
+    transcript_lower = transcript.lower()
+    
+    # Positive indicators
+    positive_words = ['interested', 'yes', 'sounds good', 'tell me more', 'when can', 'how does', 'pricing']
+    negative_words = ['not interested', 'no thanks', 'busy', 'remove', 'stop calling', 'waste of time']
+    
+    positive_count = sum(1 for word in positive_words if word in transcript_lower)
+    negative_count = sum(1 for word in negative_words if word in transcript_lower)
+    
+    # Duration factor: longer calls usually more positive
+    if duration > 120:  # 2+ minutes
+        positive_count += 1
+    elif duration < 30:  # Less than 30 seconds
+        negative_count += 1
+    
+    if positive_count > negative_count:
+        return "positive"
+    elif negative_count > positive_count:
+        return "negative"
+    else:
+        return "neutral"
+
+def extract_objection(transcript: str) -> str:
+    """Extract primary objection from transcript"""
+    transcript_lower = transcript.lower()
+    
+    objection_patterns = {
+        "price": ["too expensive", "cost", "budget", "price", "money"],
+        "timing": ["not right now", "maybe later", "call back", "busy", "bad time"],
+        "competition": ["already have", "using", "vendor", "supplier"],
+        "authority": ["not the decision", "boss", "manager", "need to ask"],
+        "interest": ["not interested", "no need", "don't need"],
+        "information": ["send info", "email", "more details", "think about"]
+    }
+    
+    for objection_type, keywords in objection_patterns.items():
+        if any(keyword in transcript_lower for keyword in keywords):
+            return objection_type
+    
+    return "none"
+
+def determine_interest_level(transcript: str, duration: int, conversion_flag: int) -> str:
+    """Determine prospect interest level"""
+    if conversion_flag == 1:
+        return "hot"
+    
+    transcript_lower = transcript.lower()
+    
+    # Hot indicators
+    hot_indicators = ['when can we', 'how much', 'pricing', 'demo', 'meeting', 'calendar']
+    # Warm indicators  
+    warm_indicators = ['tell me more', 'sounds interesting', 'how does', 'maybe']
+    # Cold indicators
+    cold_indicators = ['not interested', 'remove me', 'stop calling', 'waste of time']
+    
+    hot_count = sum(1 for indicator in hot_indicators if indicator in transcript_lower)
+    warm_count = sum(1 for indicator in warm_indicators if indicator in transcript_lower)
+    cold_count = sum(1 for indicator in cold_indicators if indicator in transcript_lower)
+    
+    # Factor in call duration
+    if duration > 180:  # 3+ minutes
+        hot_count += 1
+    elif duration > 90:  # 1.5+ minutes
+        warm_count += 1
+    elif duration < 30:  # Less than 30 seconds
+        cold_count += 1
+    
+    if hot_count > 0:
+        return "hot"
+    elif warm_count > cold_count:
+        return "warm"
+    else:
+        return "cold"
+
+@app.get("/api/analytics-stats")
+async def get_analytics_stats():
+    """Get analytics data for dashboard"""
+    db = await get_db()
+    
+    # Conversion rate by day
+    async with db.execute("""
+        SELECT DATE(created_at) as call_date, 
+               COUNT(*) as total_calls,
+               SUM(conversion_flag) as conversions,
+               AVG(duration) as avg_duration
+        FROM calls 
+        WHERE created_at >= datetime('now', '-30 days')
+        GROUP BY DATE(created_at)
+        ORDER BY call_date DESC
+    """) as cur:
+        daily_stats = await cur.fetchall()
+    
+    # Objection distribution
+    async with db.execute("""
+        SELECT objection, COUNT(*) as count
+        FROM calls 
+        WHERE objection IS NOT NULL
+        GROUP BY objection
+        ORDER BY count DESC
+    """) as cur:
+        objections = await cur.fetchall()
+    
+    # Interest level distribution
+    async with db.execute("""
+        SELECT interest_level, COUNT(*) as count,
+               AVG(duration) as avg_duration,
+               SUM(conversion_flag) as conversions
+        FROM calls 
+        WHERE interest_level IS NOT NULL
+        GROUP BY interest_level
+    """) as cur:
+        interest_levels = await cur.fetchall()
+    
+    # Sentiment vs Duration correlation
+    async with db.execute("""
+        SELECT sentiment, 
+               AVG(duration) as avg_duration,
+               COUNT(*) as count,
+               SUM(conversion_flag) as conversions
+        FROM calls 
+        WHERE sentiment IS NOT NULL
+        GROUP BY sentiment
+    """) as cur:
+        sentiment_stats = await cur.fetchall()
+    
+    await db.close()
+    
+    return {
+        "daily_stats": [{"date": r[0], "total_calls": r[1], "conversions": r[2], "avg_duration": r[3]} for r in daily_stats],
+        "objections": [{"type": r[0], "count": r[1]} for r in objections],
+        "interest_levels": [{"level": r[0], "count": r[1], "avg_duration": r[2], "conversions": r[3]} for r in interest_levels],
+        "sentiment_stats": [{"sentiment": r[0], "avg_duration": r[1], "count": r[2], "conversions": r[3]} for r in sentiment_stats]
+    }
+
 if __name__ == "__main__":
     uvicorn.run(
         "main:app",

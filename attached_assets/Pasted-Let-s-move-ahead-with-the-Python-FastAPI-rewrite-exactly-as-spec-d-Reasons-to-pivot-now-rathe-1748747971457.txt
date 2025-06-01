@@ -1,0 +1,45 @@
+Let’s move ahead with the **Python + FastAPI rewrite** exactly as spec’d.
+Reasons to pivot now rather than patch the current Node demo:
+
+1. **One-click Replit deploy** – FastAPI + SQLite keeps everything in-repo (no external Redis/Mongo) and works reliably on the always-on container.
+2. **Async concurrency** – `asyncio` + `httpx` lets us throttle outbound calls cleanly; Node’s current loop is blocking.
+3. **Typed data layer** – Having a real schema means transcripts, outcomes, retries, and analytics come for free.
+4. **Webhook mapping** – Easier to guarantee idempotency with Python coroutines + `aiosqlite` transactions.
+5. **Future self-improvement loop** – Nightly prompt-scoring cron is simpler in Python.
+
+### Next tasks for Replit Agent
+
+1. **Create branch `fastapi-migration`** (or new repl) and scaffold exactly the directory layout in the spec.
+2. **Port static frontend**
+
+   * Copy existing `public/` or `views/` assets into `/static/`
+   * Ensure upload form submits to `/api/upload-leads` (FastAPI) and dashboard fetches `/api/calls`.
+3. **Build DB layer**
+
+   * Load `db/schema.sql` at startup; verify tables exist.
+   * Implement helper funcs `insert_lead`, `update_call`, `fetch_calls`.
+4. **Implement endpoints** (`main.py`)
+
+   * `/api/upload-leads` (CSV → leads)
+   * `/api/start` (enqueue pending leads)
+   * `/api/calls` (JSON for dashboard)
+   * `/webhook` (Bland callback)
+5. **Async dialer**
+
+   * `asyncio.Queue` + semaphore (env `CONCURRENCY`)
+   * `create_call()` in `calls/call_engine.py` uses Bland API with `httpx`.
+6. **Prompt engine**
+
+   * Read templates from `/prompts/*.txt`; render with `string.Template`.
+   * Fallback to `default.txt` if prompt missing.
+7. **Secrets & config**
+
+   * Read `BLAND_API_KEY`, `VOICE_ID`, `CALLBACK_URL`, `CONCURRENCY` from Replit Secrets.
+8. **Testing flow**
+
+   * Seed one test number, run upload, start calls, confirm webhook logs outcome to DB & dashboard.
+9. **README update** with quick-start (clone → set secrets → Run).
+
+Once the FastAPI version is green, we can deprecate the Node script or keep it in a `/legacy` folder for reference.
+
+Proceed with the migration.

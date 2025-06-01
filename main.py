@@ -265,6 +265,7 @@ async def delete_prompt(prompt_name: str):
 @app.post("/api/test-call")
 async def test_call(data: dict):
     """Initiate a test call with single phone number"""
+    print(f"[TEST CALL] Received request: {data}")
     try:
         phone = data.get("phone")
         contact = data.get("contact", "Test Contact")
@@ -272,18 +273,24 @@ async def test_call(data: dict):
         template = data.get("template", "default")
         voice_id = data.get("voice") or os.getenv("VOICE_ID")
         
+        print(f"[TEST CALL] Parsed - Phone: {phone}, Contact: {contact}, Company: {company}, Template: {template}, Voice: {voice_id}")
+        
         if not phone:
+            print("[TEST CALL] ERROR: No phone number provided")
             return {"success": False, "message": "Phone number is required"}
         
         # Load prompt template
         try:
             with open(f"prompts/{template}.txt", "r") as f:
                 prompt_template = f.read()
+            print(f"[TEST CALL] Loaded prompt template: {template}")
         except FileNotFoundError:
             prompt_template = "Hi {contact}, this is Alex from Luma. Quick question—are you happy with how many qualified leads you're getting each month?"
+            print(f"[TEST CALL] Template {template} not found, using default")
         
         # Substitute variables
         prompt = prompt_template.replace("{contact}", contact).replace("{company}", company).replace("{phone}", phone)
+        print(f"[TEST CALL] Generated prompt: {prompt[:100]}...")
         
         # Call Bland.ai API
         bland_payload = {
@@ -293,11 +300,15 @@ async def test_call(data: dict):
             "webhook": "https://callninja.replit.app/webhook",
             "reduce_latency": True
         }
+        print(f"[TEST CALL] Bland payload: {bland_payload}")
         
         async with httpx.AsyncClient() as client:
             api_key = os.getenv("BLAND_API_KEY")
             if not api_key:
+                print("[TEST CALL] ERROR: No Bland.ai API key found")
                 return {"success": False, "message": "Bland.ai API key not configured"}
+            
+            print(f"[TEST CALL] Making API call to Bland.ai with key: {api_key[:10]}...")
             
             response = await client.post(
                 "https://api.bland.ai/v1/calls",
@@ -305,24 +316,36 @@ async def test_call(data: dict):
                 headers={"Authorization": api_key}
             )
             
+            print(f"[TEST CALL] Bland.ai response status: {response.status_code}")
+            print(f"[TEST CALL] Bland.ai response body: {response.text}")
+            
             if response.status_code == 200:
                 call_data = response.json()
+                call_id = call_data.get("call_id")
+                print(f"[TEST CALL] Call created successfully with ID: {call_id}")
                 
                 # Store test call in database
                 db = await get_db()
+                print("[TEST CALL] Storing call in database...")
                 async with db.execute(
                     "INSERT INTO calls (phone, company, status, call_id, prompt_name) VALUES (?, ?, ?, ?, ?)",
-                    (phone, f"{contact} - {company}", "queued", call_data.get("call_id"), template)
+                    (phone, f"{contact} - {company}", "queued", call_id, template)
                 ) as cur:
                     pass
                 await db.commit()
                 await db.close()
+                print("[TEST CALL] Call stored in database successfully")
                 
-                return {"success": True, "call_id": call_data.get("call_id"), "message": "Test call initiated successfully"}
+                return {"success": True, "call_id": call_id, "message": "Test call initiated successfully"}
             else:
+                print(f"[TEST CALL] ERROR: Bland.ai API failed with status {response.status_code}: {response.text}")
                 return {"success": False, "message": f"Bland.ai API error: {response.text}"}
                 
     except Exception as e:
+        print(f"[TEST CALL] EXCEPTION: {str(e)}")
+        print(f"[TEST CALL] Exception type: {type(e)}")
+        import traceback
+        print(f"[TEST CALL] Traceback: {traceback.format_exc()}")
         return {"success": False, "message": str(e)}
 
 @app.get("/api/test-calls")
@@ -401,11 +424,16 @@ async def get_stats():
 @app.post("/webhook")
 async def webhook_handler(request_data: dict):
     """Handle Bland.ai webhook notifications"""
+    print(f"[WEBHOOK] Received webhook data: {request_data}")
+    
     call_id = request_data.get("call_id")
     outcome = request_data.get("outcome", "unknown")
     transcript = request_data.get("transcript", "")
     duration = request_data.get("call_length", 0)
     status = "completed" if outcome else "failed"
+    
+    print(f"[WEBHOOK] Parsed - Call ID: {call_id}, Outcome: {outcome}, Duration: {duration}, Status: {status}")
+    print(f"[WEBHOOK] Transcript length: {len(transcript) if transcript else 0} characters")
     
     # Check for booking information in transcript
     meeting_time = None

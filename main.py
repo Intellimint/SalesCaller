@@ -181,14 +181,23 @@ async def list_leads():
 async def list_calls():
     db = await get_db()
     async with db.execute("""
-        SELECT phone, company, outcome, transcript 
+        SELECT phone, company, outcome, transcript, status, duration, conversion_flag, call_id
         FROM calls 
         ORDER BY created_at DESC 
         LIMIT 50
     """) as cur:
         rows = await cur.fetchall()
     await db.close()
-    return [{"phone": r[0], "company": r[1], "outcome": r[2], "transcript": r[3]} for r in rows]
+    return [{
+        "phone": r[0], 
+        "company": r[1], 
+        "outcome": r[2] or "completed" if r[4] == "completed" else "unknown", 
+        "transcript": r[3] or "No transcript available",
+        "status": r[4] or "pending",
+        "duration": r[5] or 0,
+        "conversion_flag": r[6] or 0,
+        "call_id": r[7]
+    } for r in rows]
 
 @app.get("/api/prompts")
 async def list_prompts():

@@ -16,7 +16,7 @@ export default function Testing() {
   const [contact, setContact] = useState("");
   const [company, setCompany] = useState("");
   const [promptName, setPromptName] = useState("default");
-  const [voiceId, setVoiceId] = useState("");
+  const [voiceId, setVoiceId] = useState("default");
   const [isDialing, setIsDialing] = useState(false);
   const [lastCall, setLastCall] = useState<any>(null);
   const { toast } = useToast();
@@ -205,7 +205,7 @@ export default function Testing() {
                     <SelectValue placeholder="Use default voice" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Default Voice</SelectItem>
+                    <SelectItem value="default">Default Voice</SelectItem>
                     <SelectItem value="professional_male">Professional Male</SelectItem>
                     <SelectItem value="professional_female">Professional Female</SelectItem>
                     <SelectItem value="conversational_male">Conversational Male</SelectItem>

@@ -245,7 +245,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Make the call immediately
       try {
         const prompt = await getPromptForLead(lead);
-        const blandCallId = await createBlandCall(lead.phone, prompt, voiceId || undefined);
+        const finalVoiceId = voiceId === "default" ? undefined : voiceId;
+        const blandCallId = await createBlandCall(lead.phone, prompt, finalVoiceId);
         
         // Update lead status and create call record
         await storage.updateLeadStatus(lead.id, "dialing");

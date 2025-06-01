@@ -1,12 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { Sidebar } from "@/components/sidebar";
 import { StatsCards } from "@/components/stats-cards";
 import { UploadSection } from "@/components/upload-section";
 import { CampaignSettings } from "@/components/campaign-settings";
 import { LiveStatus } from "@/components/live-status";
 import { CallsTable } from "@/components/calls-table";
 import { TranscriptModal } from "@/components/transcript-modal";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Play, Upload } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
@@ -72,73 +71,67 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen flex bg-slate-50">
-      <Sidebar />
-      
-      <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
         {/* Top Bar */}
-        <header className="bg-white border-b border-slate-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold text-slate-900">Campaign Dashboard</h1>
-              <p className="text-sm text-slate-600">Monitor and manage your outbound calling campaigns</p>
-            </div>
-            <div className="flex items-center space-x-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-900">Campaign Dashboard</h1>
+            <p className="text-sm text-slate-600">Monitor and manage your outbound calling campaigns</p>
+          </div>
+          <div className="flex items-center space-x-4">
+            <Button 
+              onClick={() => setIsUploadOpen(true)}
+              className="bg-primary-600 hover:bg-primary-700"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Upload Leads
+            </Button>
+            {campaignStatus?.isActive ? (
               <Button 
-                onClick={() => setIsUploadOpen(true)}
-                className="bg-primary-600 hover:bg-primary-700"
+                onClick={handleStopCampaign}
+                variant="destructive"
               >
-                <Upload className="w-4 h-4 mr-2" />
-                Upload Leads
+                Stop Campaign
               </Button>
-              {campaignStatus?.isActive ? (
-                <Button 
-                  onClick={handleStopCampaign}
-                  variant="destructive"
-                >
-                  Stop Campaign
-                </Button>
-              ) : (
-                <Button 
-                  onClick={handleStartCampaign}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  <Play className="w-4 h-4 mr-2" />
-                  Start Campaign
-                </Button>
-              )}
-            </div>
+            ) : (
+              <Button 
+                onClick={handleStartCampaign}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <Play className="w-4 h-4 mr-2" />
+                Start Campaign
+              </Button>
+            )}
           </div>
-        </header>
+        </div>
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto p-6">
-          <StatsCards stats={stats} />
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <UploadSection 
-              isOpen={isUploadOpen} 
-              onClose={() => setIsUploadOpen(false)}
-              onUploadComplete={() => {
-                refetchStats();
-                refetchCalls();
-                setIsUploadOpen(false);
-              }}
-            />
-            <CampaignSettings />
-            <LiveStatus 
-              campaignStatus={campaignStatus}
-              onStop={handleStopCampaign}
-            />
-          </div>
-          
-          <CallsTable 
-            calls={calls || []}
-            onViewTranscript={setSelectedTranscript}
-            onRefresh={refetchCalls}
+        <StatsCards stats={stats} />
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <CampaignSettings />
+          <LiveStatus 
+            campaignStatus={campaignStatus}
+            onStop={handleStopCampaign}
           />
-        </main>
+        </div>
+        
+        <CallsTable 
+          calls={calls || []}
+          onViewTranscript={setSelectedTranscript}
+          onRefresh={refetchCalls}
+        />
       </div>
+
+      <UploadSection 
+        isOpen={isUploadOpen} 
+        onClose={() => setIsUploadOpen(false)}
+        onUploadComplete={() => {
+          refetchStats();
+          refetchCalls();
+          setIsUploadOpen(false);
+        }}
+      />
 
       <TranscriptModal 
         call={selectedTranscript}

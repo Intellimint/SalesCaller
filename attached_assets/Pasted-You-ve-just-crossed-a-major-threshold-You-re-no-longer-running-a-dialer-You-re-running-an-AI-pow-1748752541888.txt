@@ -1,0 +1,94 @@
+You've just crossed a major threshold.
+You’re no longer running a dialer—
+You’re running an **AI-powered persuasion lab.**
+
+---
+
+### ✅ Current System = *MVP Complete*
+
+You now have:
+
+| Component                | Status            |
+| ------------------------ | ----------------- |
+| FastAPI backend          | ✅ Done            |
+| SQLite with tagging      | ✅ Done            |
+| Voice call integration   | ✅ Done (Bland.ai) |
+| Auto-tagging transcripts | ✅ Done            |
+| Analytics dashboard      | ✅ Done            |
+
+---
+
+### 🔥 Next Move: **Close the Loop**
+
+Now that you can **see which leads are hot**, you need a reliable, replicable **next action** to convert them.
+
+Here’s the unlock:
+
+---
+
+## 🎯 The "Next Action" for Hot/Warm Leads
+
+> **Every warm/hot lead should be nudged toward a live demo, pilot link, or scheduled call.**
+
+Make it automatic.
+
+### 🌱 Option 1: **Send Personalized Follow-Up Emails**
+
+* Use call transcript data to auto-fill:
+
+  * First name
+  * Company
+  * Objection if any (“You mentioned you're already using…”)
+  * Booking link (Calendly or Luma pilot)
+* Use your voice: “Thanks again for the call—here’s that info I promised.”
+
+**→ Replit Task:**
+
+> Build `/api/email-leads` to send templated follow-up emails to all HOT or WARM leads using Mailgun or Gmail API.
+
+---
+
+### 🧠 Option 2: **Create “Lead Cards” for Manual Follow-Up**
+
+* Clickable card view for each tagged lead
+* Shows:
+
+  * Summary
+  * Tags: Hot | “Objection: Timing” | Positive Sentiment
+  * Transcript snippet
+  * Quick buttons: ✅ Email | 📞 Callback | 🗑️ Discard
+
+**→ Replit Task:**
+
+> Build a `/leads` frontend page that loads all tagged leads with sorting/filtering by interest level and objection type.
+
+---
+
+### 🧪 Option 3: **Let the Agent Try Again**
+
+* If the objection was “Not now” or “Send info,” requeue it for retry with a different script.
+* Use your tagging system to detect retry-worthy calls.
+
+**→ Replit Task:**
+
+> Add a “Retry Queue” button on the analytics dashboard: Requeues any warm/positive leads with retry-worthy objections for a follow-up call 3 days later using variation B of the script.
+
+---
+
+## 🧠 Strategic Goal for Conversion:
+
+> **“Get every hot lead into an email inbox or calendar.”**
+
+That’s your reliable, replicable close.
+
+---
+
+### TL;DR: Next 3 Features to Build
+
+| Priority | Feature                        | Purpose                                |
+| -------- | ------------------------------ | -------------------------------------- |
+| 🥇       | **Email Hot Leads** (via API)  | Close the loop + book calls            |
+| 🥈       | **Lead Cards Page**            | Human-readable, fast action dashboard  |
+| 🥉       | **Retry Queue for Objections** | Automated follow-up on "Not now" leads |
+
+Want help drafting the email follow-up template, lead card layout, or retry script variation B?

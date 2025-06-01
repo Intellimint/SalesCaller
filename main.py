@@ -1,6 +1,7 @@
 import os
 import asyncio
 import uvicorn
+import json
 from fastapi import FastAPI, UploadFile, Form, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -441,17 +442,15 @@ async def analyze_calls():
     for call_row in calls_to_analyze:
         call_id, transcript, duration, conversion_flag = call_row
         
-        # Analyze transcript for patterns
-        sentiment = analyze_sentiment(transcript, duration)
-        objection = extract_objection(transcript)
-        interest_level = determine_interest_level(transcript, duration, conversion_flag)
+        # Analyze transcript using GPT-4o
+        analysis = await analyze_transcript_with_ai(transcript, duration or 0, conversion_flag or 0)
         
-        # Update database with analysis
+        # Update database with AI analysis
         await db.execute("""
             UPDATE calls 
-            SET sentiment=?, objection=?, interest_level=? 
+            SET sentiment=?, objection=?, interest_level=?, summary=? 
             WHERE id=?
-        """, (sentiment, objection, interest_level, call_id))
+        """, (analysis['sentiment'], analysis['objection'], analysis['interest_level'], analysis['summary'], call_id))
         
         analyzed_count += 1
     
@@ -460,81 +459,113 @@ async def analyze_calls():
     
     return {"analyzed": analyzed_count}
 
-def analyze_sentiment(transcript: str, duration: int) -> str:
-    """Analyze sentiment based on transcript content and call duration"""
+async def analyze_transcript_with_ai(transcript: str, duration: int, conversion_flag: int) -> dict:
+    """Analyze transcript using GPT-4o for intelligent insights"""
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://api.openai.com/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {os.getenv('OPENAI_API_KEY')}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "gpt-4o",
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": """You are analyzing sales call transcripts. Provide analysis in this exact JSON format:
+{
+  "sentiment": "positive|negative|neutral",
+  "objection": "price|timing|competition|authority|interest|information|none",
+  "interest_level": "hot|warm|cold",
+  "summary": "One sentence summary of the call outcome"
+}
+
+Consider:
+- Call duration as an engagement indicator (longer = more interested)
+- Actual conversation context, not just keywords
+- Prospect's tone and responses
+- Whether they asked questions or showed curiosity"""
+                        },
+                        {
+                            "role": "user",
+                            "content": f"""Analyze this sales call:
+
+TRANSCRIPT:
+{transcript}
+
+CALL DURATION: {duration} seconds
+CONVERSION: {'Yes' if conversion_flag == 1 else 'No'}
+
+Provide your analysis in the specified JSON format."""
+                        }
+                    ],
+                    "response_format": {"type": "json_object"},
+                    "temperature": 0.1
+                }
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                analysis = json.loads(result["choices"][0]["message"]["content"])
+                
+                # Ensure we have all required fields with defaults
+                return {
+                    "sentiment": analysis.get("sentiment", "neutral"),
+                    "objection": analysis.get("objection", "none"),
+                    "interest_level": analysis.get("interest_level", "cold"),
+                    "summary": analysis.get("summary", "Call completed - see transcript for details")
+                }
+            else:
+                # Fallback to basic analysis if OpenAI fails
+                return fallback_analysis(transcript, duration, conversion_flag)
+                
+    except Exception as e:
+        print(f"OpenAI analysis failed: {e}")
+        return fallback_analysis(transcript, duration, conversion_flag)
+
+def fallback_analysis(transcript: str, duration: int, conversion_flag: int) -> dict:
+    """Fallback analysis using keyword matching"""
     transcript_lower = transcript.lower()
     
-    # Positive indicators
-    positive_words = ['interested', 'yes', 'sounds good', 'tell me more', 'when can', 'how does', 'pricing']
-    negative_words = ['not interested', 'no thanks', 'busy', 'remove', 'stop calling', 'waste of time']
+    # Basic sentiment
+    positive_words = ['interested', 'yes', 'sounds good', 'tell me more', 'pricing']
+    negative_words = ['not interested', 'no thanks', 'busy', 'remove', 'stop calling']
     
     positive_count = sum(1 for word in positive_words if word in transcript_lower)
     negative_count = sum(1 for word in negative_words if word in transcript_lower)
     
-    # Duration factor: longer calls usually more positive
-    if duration > 120:  # 2+ minutes
+    if duration > 120:
         positive_count += 1
-    elif duration < 30:  # Less than 30 seconds
+    elif duration < 30:
         negative_count += 1
     
-    if positive_count > negative_count:
-        return "positive"
-    elif negative_count > positive_count:
-        return "negative"
-    else:
-        return "neutral"
-
-def extract_objection(transcript: str) -> str:
-    """Extract primary objection from transcript"""
-    transcript_lower = transcript.lower()
+    sentiment = "positive" if positive_count > negative_count else "negative" if negative_count > positive_count else "neutral"
     
-    objection_patterns = {
-        "price": ["too expensive", "cost", "budget", "price", "money"],
-        "timing": ["not right now", "maybe later", "call back", "busy", "bad time"],
-        "competition": ["already have", "using", "vendor", "supplier"],
-        "authority": ["not the decision", "boss", "manager", "need to ask"],
-        "interest": ["not interested", "no need", "don't need"],
-        "information": ["send info", "email", "more details", "think about"]
-    }
+    # Basic objection detection
+    objection = "none"
+    if any(word in transcript_lower for word in ['expensive', 'cost', 'budget', 'price']):
+        objection = "price"
+    elif any(word in transcript_lower for word in ['not right now', 'busy', 'bad time']):
+        objection = "timing"
+    elif any(word in transcript_lower for word in ['already have', 'using']):
+        objection = "competition"
     
-    for objection_type, keywords in objection_patterns.items():
-        if any(keyword in transcript_lower for keyword in keywords):
-            return objection_type
-    
-    return "none"
-
-def determine_interest_level(transcript: str, duration: int, conversion_flag: int) -> str:
-    """Determine prospect interest level"""
+    # Interest level
     if conversion_flag == 1:
-        return "hot"
-    
-    transcript_lower = transcript.lower()
-    
-    # Hot indicators
-    hot_indicators = ['when can we', 'how much', 'pricing', 'demo', 'meeting', 'calendar']
-    # Warm indicators  
-    warm_indicators = ['tell me more', 'sounds interesting', 'how does', 'maybe']
-    # Cold indicators
-    cold_indicators = ['not interested', 'remove me', 'stop calling', 'waste of time']
-    
-    hot_count = sum(1 for indicator in hot_indicators if indicator in transcript_lower)
-    warm_count = sum(1 for indicator in warm_indicators if indicator in transcript_lower)
-    cold_count = sum(1 for indicator in cold_indicators if indicator in transcript_lower)
-    
-    # Factor in call duration
-    if duration > 180:  # 3+ minutes
-        hot_count += 1
-    elif duration > 90:  # 1.5+ minutes
-        warm_count += 1
-    elif duration < 30:  # Less than 30 seconds
-        cold_count += 1
-    
-    if hot_count > 0:
-        return "hot"
-    elif warm_count > cold_count:
-        return "warm"
+        interest_level = "hot"
+    elif duration > 120 and sentiment == "positive":
+        interest_level = "warm"
     else:
-        return "cold"
+        interest_level = "cold"
+    
+    return {
+        "sentiment": sentiment,
+        "objection": objection,
+        "interest_level": interest_level,
+        "summary": f"Call lasted {duration}s - {sentiment} response"
+    }
 
 @app.get("/api/analytics-stats")
 async def get_analytics_stats():

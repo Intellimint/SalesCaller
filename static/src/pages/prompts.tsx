@@ -1,18 +1,90 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, queryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { FileText, Plus, Edit, Eye } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { FileText, Plus, Edit, Eye, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Prompts() {
   const [selectedPrompt, setSelectedPrompt] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [newPromptName, setNewPromptName] = useState("");
+  const [newPromptContent, setNewPromptContent] = useState("");
+  const [editedContent, setEditedContent] = useState("");
+  const { toast } = useToast();
 
   const { data: prompts } = useQuery({
     queryKey: ["/api/prompts"],
+  });
+
+  const createPromptMutation = useMutation({
+    mutationFn: async ({ name, content }: { name: string; content: string }) => {
+      return apiRequest(`/api/prompts/${name}`, {
+        method: "POST",
+        body: JSON.stringify({ content }),
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Prompt created successfully" });
+      queryClient.invalidateQueries({ queryKey: ["/api/prompts"] });
+      setShowCreateDialog(false);
+      setNewPromptName("");
+      setNewPromptContent("");
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to create prompt",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const updatePromptMutation = useMutation({
+    mutationFn: async ({ name, content }: { name: string; content: string }) => {
+      return apiRequest(`/api/prompts/${name}`, {
+        method: "PUT",
+        body: JSON.stringify({ content }),
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Prompt updated successfully" });
+      setIsEditing(false);
+      handleViewPrompt(selectedPrompt.name.toLowerCase());
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to update prompt",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const deletePromptMutation = useMutation({
+    mutationFn: async (name: string) => {
+      return apiRequest(`/api/prompts/${name}`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Prompt deleted successfully" });
+      queryClient.invalidateQueries({ queryKey: ["/api/prompts"] });
+      setSelectedPrompt(null);
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to delete prompt",
+        variant: "destructive"
+      });
+    }
   });
 
   const handleViewPrompt = async (promptId: string) => {
@@ -20,10 +92,45 @@ export default function Prompts() {
       const response = await fetch(`/api/prompts/${promptId}`);
       const promptData = await response.json();
       setSelectedPrompt(promptData);
+      setEditedContent(promptData.content);
       setIsEditing(false);
     } catch (error) {
       console.error("Failed to load prompt:", error);
     }
+  };
+
+  const handleSavePrompt = () => {
+    updatePromptMutation.mutate({
+      name: selectedPrompt.name.toLowerCase(),
+      content: editedContent
+    });
+  };
+
+  const handleCreatePrompt = () => {
+    if (!newPromptName.trim() || !newPromptContent.trim()) {
+      toast({ 
+        title: "Error", 
+        description: "Please provide both name and content",
+        variant: "destructive"
+      });
+      return;
+    }
+    createPromptMutation.mutate({
+      name: newPromptName.toLowerCase().replace(/\s+/g, '-'),
+      content: newPromptContent
+    });
+  };
+
+  const handleDeletePrompt = (promptName: string) => {
+    if (promptName === "default") {
+      toast({ 
+        title: "Error", 
+        description: "Cannot delete default prompt",
+        variant: "destructive"
+      });
+      return;
+    }
+    deletePromptMutation.mutate(promptName.toLowerCase());
   };
 
   return (
@@ -31,10 +138,56 @@ export default function Prompts() {
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-gray-900">Prompts</h1>
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            Create New Prompt
-          </Button>
+          <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Create New Prompt
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>Create New Prompt</DialogTitle>
+                <DialogDescription>
+                  Create a new AI calling script for your campaigns.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Prompt Name
+                  </label>
+                  <Input
+                    value={newPromptName}
+                    onChange={(e) => setNewPromptName(e.target.value)}
+                    placeholder="e.g., Sales Follow-up"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Script Content
+                  </label>
+                  <Textarea
+                    value={newPromptContent}
+                    onChange={(e) => setNewPromptContent(e.target.value)}
+                    placeholder="Enter your AI calling script..."
+                    className="min-h-[200px]"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleCreatePrompt} 
+                  disabled={createPromptMutation.isPending}
+                >
+                  {createPromptMutation.isPending ? "Creating..." : "Create Prompt"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -89,6 +242,21 @@ export default function Prompts() {
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
+                          {prompt.id !== "default" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (confirm(`Are you sure you want to delete "${prompt.name}"?`)) {
+                                  handleDeletePrompt(prompt.id);
+                                }
+                              }}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -117,12 +285,34 @@ export default function Prompts() {
                   </CardDescription>
                 </div>
                 {selectedPrompt && (
-                  <Button
-                    variant={isEditing ? "default" : "outline"}
-                    onClick={() => setIsEditing(!isEditing)}
-                  >
-                    {isEditing ? "Save" : "Edit"}
-                  </Button>
+                  <div className="flex space-x-2">
+                    {isEditing ? (
+                      <>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setIsEditing(false);
+                            setEditedContent(selectedPrompt.content);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={handleSavePrompt}
+                          disabled={updatePromptMutation.isPending}
+                        >
+                          {updatePromptMutation.isPending ? "Saving..." : "Save"}
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsEditing(true)}
+                      >
+                        Edit
+                      </Button>
+                    )}
+                  </div>
                 )}
               </div>
             </CardHeader>

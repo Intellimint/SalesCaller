@@ -208,6 +208,42 @@ async def update_prompt(prompt_name: str, data: dict):
     except Exception as e:
         return {"success": False, "message": str(e)}
 
+@app.post("/api/prompts/{prompt_name}")
+async def create_prompt(prompt_name: str, data: dict):
+    """Create a new prompt"""
+    try:
+        content = data.get("content", "")
+        
+        # Create prompts directory if it doesn't exist
+        os.makedirs("prompts", exist_ok=True)
+        
+        # Check if prompt already exists
+        if os.path.exists(f"prompts/{prompt_name}.txt"):
+            return {"success": False, "message": "Prompt already exists"}
+        
+        with open(f"prompts/{prompt_name}.txt", "w") as f:
+            f.write(content)
+        return {"success": True, "message": "Prompt created successfully"}
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
+@app.delete("/api/prompts/{prompt_name}")
+async def delete_prompt(prompt_name: str):
+    """Delete a prompt"""
+    try:
+        # Don't allow deleting the default prompt
+        if prompt_name == "default":
+            return {"success": False, "message": "Cannot delete default prompt"}
+        
+        prompt_path = f"prompts/{prompt_name}.txt"
+        if os.path.exists(prompt_path):
+            os.remove(prompt_path)
+            return {"success": True, "message": "Prompt deleted successfully"}
+        else:
+            return {"success": False, "message": "Prompt not found"}
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
 @app.post("/api/test-call")
 async def test_call(data: dict):
     """Initiate a test call with single phone number"""
@@ -276,7 +312,7 @@ async def get_test_calls():
     """Get recent test calls"""
     db = await get_db()
     async with db.execute(
-        "SELECT phone, company, status, created_at FROM calls WHERE company LIKE '%Test%' ORDER BY created_at DESC LIMIT 10"
+        "SELECT phone, company, outcome, created_at FROM calls WHERE company LIKE '%Test%' ORDER BY created_at DESC LIMIT 10"
     ) as cur:
         rows = await cur.fetchall()
     await db.close()
@@ -285,7 +321,7 @@ async def get_test_calls():
         "phone": r[0],
         "contact": r[1].split(" - ")[0] if " - " in r[1] else "Test Contact",
         "company": r[1].split(" - ")[1] if " - " in r[1] else r[1],
-        "status": r[2],
+        "status": r[2] or "completed",
         "timestamp": r[3]
     } for r in rows]
 

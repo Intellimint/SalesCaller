@@ -199,6 +199,83 @@ async def update_prompt(prompt_name: str, data: dict):
     except Exception as e:
         return {"success": False, "message": str(e)}
 
+@app.post("/api/test-call")
+async def test_call(data: dict):
+    """Initiate a test call with single phone number"""
+    try:
+        phone = data.get("phone")
+        contact = data.get("contact", "Test Contact")
+        company = data.get("company", "Test Company")
+        template = data.get("template", "default")
+        voice_id = data.get("voice") or os.getenv("VOICE_ID")
+        
+        if not phone:
+            return {"success": False, "message": "Phone number is required"}
+        
+        # Load prompt template
+        try:
+            with open(f"prompts/{template}.txt", "r") as f:
+                prompt_template = f.read()
+        except FileNotFoundError:
+            prompt_template = "Hi {contact}, this is Alex from Luma. Quick question—are you happy with how many qualified leads you're getting each month?"
+        
+        # Substitute variables
+        prompt = prompt_template.replace("{contact}", contact).replace("{company}", company).replace("{phone}", phone)
+        
+        # Call Bland.ai API
+        bland_payload = {
+            "phone_number": phone,
+            "task": prompt,
+            "voice_id": voice_id,
+            "webhook": os.getenv("CALLBACK_URL", "https://callninja.replit.app") + "/webhook",
+            "reduce_latency": True
+        }
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://api.bland.ai/v1/calls",
+                json=bland_payload,
+                headers={"Authorization": os.getenv("BLAND_API_KEY")}
+            )
+            
+            if response.status_code == 200:
+                call_data = response.json()
+                
+                # Store test call in database
+                db = await get_db()
+                async with db.execute(
+                    "INSERT INTO calls (phone, company, status, call_id, prompt_name) VALUES (?, ?, ?, ?, ?)",
+                    (phone, f"{contact} - {company}", "queued", call_data.get("call_id"), template)
+                ) as cur:
+                    pass
+                await db.commit()
+                await db.close()
+                
+                return {"success": True, "call_id": call_data.get("call_id"), "message": "Test call initiated successfully"}
+            else:
+                return {"success": False, "message": f"Bland.ai API error: {response.text}"}
+                
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
+@app.get("/api/test-calls")
+async def get_test_calls():
+    """Get recent test calls"""
+    db = await get_db()
+    async with db.execute(
+        "SELECT phone, company, status, created_at FROM calls WHERE company LIKE '%Test%' ORDER BY created_at DESC LIMIT 10"
+    ) as cur:
+        rows = await cur.fetchall()
+    await db.close()
+    
+    return [{
+        "phone": r[0],
+        "contact": r[1].split(" - ")[0] if " - " in r[1] else "Test Contact",
+        "company": r[1].split(" - ")[1] if " - " in r[1] else r[1],
+        "status": r[2],
+        "timestamp": r[3]
+    } for r in rows]
+
 @app.get("/api/stats")
 async def get_stats():
     db = await get_db()

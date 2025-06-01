@@ -32,6 +32,10 @@
                     <i data-lucide="megaphone" class="w-5 h-5 mr-3"></i>
                     Campaigns
                 </a>
+                <a href="#testing" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
+                    <i data-lucide="phone" class="w-5 h-5 mr-3"></i>
+                    Test Call
+                </a>
                 <a href="#leads" class="nav-link flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
                     <i data-lucide="users" class="w-5 h-5 mr-3"></i>
                     Leads
@@ -378,6 +382,83 @@
                     </div>
                 </div>
 
+                <!-- Test Call Page -->
+                <div id="testingPage" class="page" style="display: none;">
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-2">Test Single Call</h2>
+                        <p class="text-gray-600">Test the AI calling system with a single phone number before running campaigns.</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Test Call Setup -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center mb-6">
+                                <i data-lucide="phone" class="w-5 h-5 mr-2 text-blue-600"></i>
+                                <h3 class="text-lg font-semibold">Test Call Setup</h3>
+                            </div>
+                            
+                            <form id="testCallForm" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        Phone Number <span class="text-red-500">*</span>
+                                    </label>
+                                    <div class="relative">
+                                        <input type="tel" id="testPhone" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="+1 (555) 123-4567" required>
+                                        <span class="absolute right-3 top-2 text-red-500 text-sm font-bold">*</span>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">Use your own phone number to test the AI calling system</p>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Contact Name</label>
+                                    <input type="text" id="testContact" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Your Name">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
+                                    <input type="text" id="testCompany" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Your Company">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Script Template</label>
+                                    <select id="testTemplate" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="default">Default</option>
+                                        <option value="demo">Demo</option>
+                                        <option value="followup">Followup</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Voice Selection (Optional)</label>
+                                    <select id="testVoice" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Default Voice</option>
+                                    </select>
+                                </div>
+                                
+                                <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-4 rounded-md transition duration-200">
+                                    <i data-lucide="play" class="w-4 h-4 inline mr-2"></i>
+                                    Start Test Call
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <!-- Recent Test Calls -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold mb-6">Recent Test Calls</h3>
+                            
+                            <div id="testCallsEmpty" class="text-center py-12">
+                                <i data-lucide="phone-call" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
+                                <p class="text-gray-500 mb-2">No test calls yet</p>
+                                <p class="text-sm text-gray-400">Start your first test call to see results here</p>
+                            </div>
+                            
+                            <div id="testCallsList" class="space-y-4 hidden">
+                                <!-- Test calls will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Settings Page -->
                 <div id="settingsPage" class="page" style="display: none;">
                     <div class="bg-white rounded-lg shadow">
@@ -503,6 +584,8 @@
                     loadLeads();
                 } else if (href === 'prompts') {
                     initializePromptHandlers();
+                } else if (href === 'testing') {
+                    initializeTestCall();
                 }
             });
         });
@@ -737,6 +820,91 @@
                 alert('Error saving prompt: ' + error.message);
             }
         });
+
+        // Test Call functionality
+        function initializeTestCall() {
+            const testCallForm = document.getElementById('testCallForm');
+            if (testCallForm) {
+                testCallForm.addEventListener('submit', handleTestCall);
+            }
+            loadTestCalls();
+        }
+        
+        async function handleTestCall(e) {
+            e.preventDefault();
+            
+            const phone = document.getElementById('testPhone').value;
+            const contact = document.getElementById('testContact').value || 'Test Contact';
+            const company = document.getElementById('testCompany').value || 'Test Company';
+            const template = document.getElementById('testTemplate').value;
+            const voice = document.getElementById('testVoice').value;
+            
+            if (!phone) {
+                alert('Please enter a phone number');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/test-call', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        phone: phone,
+                        contact: contact,
+                        company: company,
+                        template: template,
+                        voice: voice
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('Test call initiated successfully!');
+                    document.getElementById('testCallForm').reset();
+                    loadTestCalls();
+                } else {
+                    alert('Failed to start test call: ' + (result.message || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Error starting test call: ' + error.message);
+            }
+        }
+        
+        async function loadTestCalls() {
+            try {
+                const response = await fetch('/api/test-calls');
+                const testCalls = await response.json();
+                
+                const emptyState = document.getElementById('testCallsEmpty');
+                const callsList = document.getElementById('testCallsList');
+                
+                if (testCalls.length === 0) {
+                    emptyState.style.display = 'block';
+                    callsList.style.display = 'none';
+                } else {
+                    emptyState.style.display = 'none';
+                    callsList.style.display = 'block';
+                    
+                    callsList.innerHTML = testCalls.map(call => `
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <p class="font-medium">${call.phone}</p>
+                                    <p class="text-sm text-gray-600">${call.contact} - ${call.company}</p>
+                                </div>
+                                <span class="px-2 py-1 text-xs rounded-full ${call.status === 'completed' ? 'bg-green-100 text-green-800' : call.status === 'failed' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}">${call.status}</span>
+                            </div>
+                            <p class="text-xs text-gray-500">${new Date(call.timestamp).toLocaleString()}</p>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Failed to load test calls:', error);
+            }
+        }
 
         // Load leads data
         async function loadLeads() {

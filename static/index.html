@@ -501,6 +501,8 @@
                 // Load page-specific data
                 if (href === 'leads') {
                     loadLeads();
+                } else if (href === 'prompts') {
+                    initializePromptHandlers();
                 }
             });
         });
@@ -628,14 +630,42 @@
         // Prompts functionality
         let currentPrompt = null;
         
-        document.querySelectorAll('.prompt-item').forEach(item => {
-            item.addEventListener('click', async (e) => {
-                if (e.target.closest('button')) return; // Don't trigger on button clicks
+        function initializePromptHandlers() {
+            document.querySelectorAll('.prompt-item').forEach(item => {
+                item.addEventListener('click', async (e) => {
+                    if (e.target.closest('button')) return; // Don't trigger on button clicks
+                    
+                    const promptName = item.dataset.prompt;
+                    await selectPrompt(promptName);
+                });
                 
-                const promptName = item.dataset.prompt;
-                await selectPrompt(promptName);
+                // Add handlers for eye and edit buttons
+                const eyeBtn = item.querySelector('[title="Preview"]');
+                const editBtn = item.querySelector('[title="Edit"]');
+                
+                if (eyeBtn) {
+                    eyeBtn.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        const promptName = item.dataset.prompt;
+                        await selectPrompt(promptName);
+                    });
+                }
+                
+                if (editBtn) {
+                    editBtn.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        const promptName = item.dataset.prompt;
+                        await selectPrompt(promptName);
+                        // Auto-enable edit mode
+                        setTimeout(() => {
+                            document.getElementById('editPromptBtn').click();
+                        }, 100);
+                    });
+                }
             });
-        });
+        }
+        
+        initializePromptHandlers();
         
         async function selectPrompt(promptName) {
             currentPrompt = promptName;

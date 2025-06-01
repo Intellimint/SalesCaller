@@ -5,6 +5,8 @@ import { insertLeadSchema, insertCampaignSchema } from "@shared/schema";
 import multer from "multer";
 import csv from "csv-parser";
 import { Readable } from "stream";
+import * as fs from "fs/promises";
+import * as path from "path";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -67,7 +69,7 @@ async function processCallQueue() {
       try {
         await storage.updateLeadStatus(lead.id, "dialing");
         
-        const prompt = getPromptForLead(lead);
+        const prompt = await getPromptForLead(lead);
         const blandCallId = await createBlandCall(lead.phone, prompt, activeCampaign.voiceId || undefined);
         
         await storage.createCall({
@@ -96,11 +98,29 @@ async function processCallQueue() {
   }
 }
 
-function getPromptForLead(lead: any): string {
-  const defaultPrompt = `Hi ${lead.contact || 'there'}, this is Sarah from SalesDialer. I hope I'm catching you at a good time. I wanted to reach out because I noticed ${lead.company || 'your company'} might benefit from our AI-powered outbound calling solution that's been helping companies increase their sales productivity by over 40%. Would you be interested in learning more?`;
-  
-  // In a real app, you'd load prompts from files or database
-  return defaultPrompt;
+async function getPromptForLead(lead: any): Promise<string> {
+  try {
+    const promptName = lead.promptName || 'default';
+    const promptPath = path.join(process.cwd(), 'prompts', `${promptName}.txt`);
+    
+    let template: string;
+    try {
+      template = await fs.readFile(promptPath, 'utf-8');
+    } catch (error) {
+      // Fallback to default if prompt file doesn't exist
+      template = await fs.readFile(path.join(process.cwd(), 'prompts', 'default.txt'), 'utf-8');
+    }
+    
+    // Replace template variables
+    return template
+      .replace(/{contact}/g, lead.contact || 'there')
+      .replace(/{company}/g, lead.company || 'your company')
+      .replace(/{phone}/g, lead.phone || '');
+  } catch (error) {
+    console.error('Error loading prompt template:', error);
+    // Ultimate fallback
+    return `Hi ${lead.contact || 'there'}, this is Sarah from SalesDialer. I hope I'm catching you at a good time. I wanted to reach out because I noticed ${lead.company || 'your company'} might benefit from our AI-powered outbound calling solution that's been helping companies increase their sales productivity by over 40%. Would you be interested in learning more?`;
+  }
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {

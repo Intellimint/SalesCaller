@@ -287,6 +287,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get available prompts
+  app.get("/api/prompts", async (req, res) => {
+    try {
+      const promptsDir = path.join(process.cwd(), 'prompts');
+      const files = await fs.readdir(promptsDir);
+      const prompts = files
+        .filter(file => file.endsWith('.txt'))
+        .map(file => ({
+          id: file.replace('.txt', ''),
+          name: file.replace('.txt', '').replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()),
+          filename: file
+        }));
+      
+      res.json(prompts);
+    } catch (error) {
+      console.error("Get prompts error:", error);
+      res.json([
+        { id: 'default', name: 'Default Sales Script', filename: 'default.txt' },
+        { id: 'followup', name: 'Follow-up Script', filename: 'followup.txt' },
+        { id: 'demo', name: 'Demo Request Script', filename: 'demo.txt' }
+      ]);
+    }
+  });
+
+  // Health check endpoint
+  app.get("/api/health", async (req, res) => {
+    try {
+      const stats = await storage.getStats();
+      const activeCampaign = await storage.getActiveCampaign();
+      
+      res.json({
+        status: "healthy",
+        timestamp: new Date().toISOString(),
+        database: "connected",
+        blandApiKey: !!process.env.BLAND_API_KEY,
+        voiceId: !!process.env.VOICE_ID,
+        activeCampaign: !!activeCampaign,
+        stats
+      });
+    } catch (error) {
+      console.error("Health check error:", error);
+      res.status(500).json({
+        status: "unhealthy",
+        timestamp: new Date().toISOString(),
+        error: "Database connection failed"
+      });
+    }
+  });
+
   // Webhook for Bland.ai
   app.post("/api/webhook", async (req, res) => {
     try {

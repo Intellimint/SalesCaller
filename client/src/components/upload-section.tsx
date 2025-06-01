@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CloudUpload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
 
 interface UploadSectionProps {
   isOpen: boolean;
@@ -19,6 +20,11 @@ export function UploadSection({ isOpen, onClose, onUploadComplete }: UploadSecti
   const [promptName, setPromptName] = useState("default");
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
+
+  // Fetch available prompts
+  const { data: prompts = [] } = useQuery({
+    queryKey: ["/api/prompts"],
+  });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -138,9 +144,19 @@ export function UploadSection({ isOpen, onClose, onUploadComplete }: UploadSecti
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="default">Default Sales Script</SelectItem>
-              <SelectItem value="followup">Follow-up Script</SelectItem>
-              <SelectItem value="demo">Demo Request Script</SelectItem>
+              {prompts.length > 0 ? (
+                prompts.map((prompt: any) => (
+                  <SelectItem key={prompt.id} value={prompt.id}>
+                    {prompt.name}
+                  </SelectItem>
+                ))
+              ) : (
+                <>
+                  <SelectItem value="default">Default Sales Script</SelectItem>
+                  <SelectItem value="followup">Follow-up Script</SelectItem>
+                  <SelectItem value="demo">Demo Request Script</SelectItem>
+                </>
+              )}
             </SelectContent>
           </Select>
         </div>

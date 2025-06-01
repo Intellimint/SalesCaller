@@ -1509,6 +1509,18 @@
                     if (href === '#prompts' || href === '#testing') {
                         setTimeout(loadPrompts, 100); // Small delay to ensure page is switched
                     }
+                    if (href === '#testing') {
+                        setTimeout(function() {
+                            loadTestCalls();
+                            loadVoices();
+                        }, 200);
+                    }
+                    if (href === '#dashboard') {
+                        setTimeout(function() {
+                            loadStats();
+                            loadCalls();
+                        }, 100);
+                    }
                 });
             });
         });

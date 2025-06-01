@@ -1,0 +1,211 @@
+**COMPREHENSIVE BUILD SPEC FOR REPLIT AGENT**
+*(Paste everything below verbatim into Replit Agent to generate an always-on mini-SaaS for outbound AI phone calls using Bland.ai.)*
+
+---
+
+## 0 · Project Summary
+
+> **Goal**  Create a single Replit project that:
+> • Lets a non-technical user upload a CSV of leads
+> • Dials every lead via **Bland.ai** with a dynamic sales prompt
+> • Handles the live conversation entirely on Bland’s side (no local ASR/TTS)
+> • Receives Bland webhooks, stores outcomes + transcripts
+> • Shows a lightweight dashboard (web UI) for status & results
+> • Runs 24 / 7 on a Premium Replit instance (always-on)
+
+---
+
+## 1 · High-Level Architecture
+
+| Layer                    | Tech                                                               | Purpose                                                            |
+| ------------------------ | ------------------------------------------------------------------ | ------------------------------------------------------------------ |
+| **Backend API**          | **FastAPI** (Python 3.11)                                          | CSV upload, call queue, webhook, REST for dashboard                |
+| **Task/Queue**           | `asyncio.create_task` + simple in-mem list (persistence in SQLite) | Fire outbound calls in parallel (configurable concurrency)         |
+| **Outbound Calls**       | `httpx` async POST to `https://api.bland.ai/v1/calls`              | Sends phone number, dynamic prompt, voice\_id                      |
+| **Webhook**              | POST `/webhook` (FastAPI route)                                    | Receives Bland call events, writes to DB                           |
+| **Storage**              | **SQLite** via `aiosqlite`                                         | Leads table, Calls table, Transcripts table                        |
+| **Frontend**             | Static HTML + vanilla JS (or HTMX) served from `/static`           | Upload page, dashboard page, prompt editor                         |
+| **Secrets**              | Replit Secrets Manager                                             | `BLAND_API_KEY`, `CALLBACK_URL`, `VOICE_ID`, `DEFAULT_PROMPT_PATH` |
+| **Background Scheduler** | `asyncio` loop in `main.py`                                        | Watches DB for `pending` leads, launches calls                     |
+
+---
+
+## 2 · Directory / File Plan
+
+```
+/ (project root)
+├── main.py                # FastAPI app + scheduler
+├── calls/
+│   ├── call_engine.py     # create_call(), build_prompt()
+│   └── webhook_handler.py # process webhook payload
+├── db/
+│   └── schema.sql         # CREATE TABLE statements
+├── data/
+│   └── sample_leads.csv   # example
+├── prompts/
+│   ├── default.txt        # “Hi, this is {{rep}} from Luma…”
+│   └── followup.txt
+├── static/
+│   ├── index.html         # upload & prompt picker
+│   ├── dashboard.html     # live table via fetch /api/calls
+│   └── app.js             # JS fetch helpers
+├── .env                   # (ignored) show sample keys
+├── replit.nix             # python-311 + uvicorn + dependencies
+├── README.md
+└── .replit                # run = "python main.py"
+```
+
+---
+
+## 3 · Detailed Requirements
+
+### 3.1 Backend
+
+**FastAPI Endpoints**
+
+| Method | Path                | Body / Query                      | Purpose                                                   |        |                         |
+| ------ | ------------------- | --------------------------------- | --------------------------------------------------------- | ------ | ----------------------- |
+| POST   | `/api/upload-leads` | multipart CSV file, `prompt_name` | Parse CSV → insert rows into `leads` (status = `pending`) |        |                         |
+| POST   | `/api/start`        | `{ "concurrency": 5 }`            | Set scheduler flag to begin dialing                       |        |                         |
+| GET    | `/api/calls`        | \`?status=all                     | pending                                                   | done\` | JSON list for dashboard |
+| POST   | `/webhook`          | Raw JSON from Bland               | Call event handler                                        |        |                         |
+
+**Database schema (SQLite)**
+
+```sql
+CREATE TABLE leads (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  phone TEXT NOT NULL,
+  company TEXT,
+  contact TEXT,
+  status TEXT DEFAULT 'pending', -- pending|dialing|done
+  prompt_name TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE calls (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  lead_id INTEGER,
+  bland_call_id TEXT,
+  outcome TEXT,               -- voicemail|no_answer|interested|not_interested
+  transcript TEXT,
+  duration INTEGER,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (lead_id) REFERENCES leads(id)
+);
+```
+
+### 3.2 Call Engine (`calls/call_engine.py`)
+
+```python
+async def create_call(lead_row):
+    prompt = render_prompt(lead_row)
+    payload = {
+        "phone_number": lead_row["phone"],
+        "task": prompt,
+        "model": "base",
+        "voice_id": os.getenv("VOICE_ID"),
+        "callback_url": os.getenv("CALLBACK_URL")
+    }
+    headers = {"Authorization": os.getenv("BLAND_API_KEY")}
+    async with httpx.AsyncClient(timeout=60) as client:
+        r = await client.post("https://api.bland.ai/v1/calls",
+                              json=payload, headers=headers)
+        r.raise_for_status()
+        return r.json()["call_id"]
+```
+
+* **Concurrency**: Scheduler uses `asyncio.Semaphore(<user-set>)`
+* **Prompt rendering**: Jinja-style `str.format` from file
+
+### 3.3 Webhook Handler
+
+* Expect fields: `event`, `call_id`, `status`, `transcript`, `duration`
+* Map Bland statuses to our `outcome`
+* Update `calls` + `leads.status = done`
+
+### 3.4 Frontend
+
+**Upload Page (index.html)**
+
+* File input, prompt dropdown (`/api/prompts`), submit → POST `/api/upload-leads`
+
+**Dashboard (dashboard.html + app.js)**
+
+* Auto-refresh every 10 s
+* Table columns: Phone | Company | Status | Outcome | Transcript (link)
+
+**Prompt Editor (optional)**
+
+* Simple textarea bound to `/api/prompts/<name>` PUT/PATCH
+
+---
+
+## 4 · Environment & Run
+
+### 4.1 `replit.nix`
+
+```nix
+{ pkgs }: {
+  deps = [
+    pkgs.python311
+    pkgs.python311Packages.fastapi
+    pkgs.python311Packages.uvicorn
+    pkgs.python311Packages.httpx
+    pkgs.python311Packages.aiosqlite
+    pkgs.python311Packages.python-dotenv
+    pkgs.sqlite
+  ];
+}
+```
+
+### 4.2 `.replit`
+
+```
+run = "uvicorn main:app --host 0.0.0.0 --port 3000 --reload"
+```
+
+Replit exposes port 3000 automatically.
+
+---
+
+## 5 · Secrets to Add in Replit Dashboard
+
+```
+BLAND_API_KEY=sk-...
+VOICE_ID=123          # optional; omit for default
+CALLBACK_URL=https://<your-repl>.replit.app/webhook
+```
+
+Do **not** commit `.env`; use Replit’s Secrets manager.
+
+---
+
+## 6 · Testing Checklist
+
+1. Seed `data/sample_leads.csv` with your phone number for safe test.
+2. Upload via UI → watch it enqueue in dashboard.
+3. Ensure call reaches you, Bland agent speaks, you reply, call ends.
+4. Confirm `/webhook` stores outcome in DB → dashboard shows `done`.
+5. Do a batch of 5 numbers, set concurrency = 2, verify parallelism.
+6. Voicemail path: let call go to voicemail, outcome should log `voicemail`.
+
+---
+
+## 7 · Extensions (Phase 2, not mandatory now)
+
+* Add Airtable adapter instead of CSV
+* Self-improving prompt scoring (simple success counter)
+* Email follow-up integration via SendGrid
+* Authentication (basic token) for UI routes
+* Deployment to Replit Deployments once stable
+
+---
+
+**Deliverable:** a fully functioning Replit repo meeting all specs above.
+Focus first on end-to-end path with 1 CSV → 1 call → webhook → dashboard.
+Iterate to handle concurrency and larger CSVs once green.
+
+*Build time estimate: 1–2 coding sessions.*
+
+---

@@ -181,6 +181,24 @@ async def list_calls():
     await db.close()
     return [{"phone": r[0], "company": r[1], "outcome": r[2], "transcript": r[3]} for r in rows]
 
+@app.get("/api/prompts/{prompt_name}")
+async def get_prompt(prompt_name: str):
+    try:
+        with open(f"prompts/{prompt_name}.txt", "r") as f:
+            content = f.read()
+        return {"name": prompt_name.title(), "content": content}
+    except FileNotFoundError:
+        return {"name": prompt_name.title(), "content": "Hi, this is Alex from Luma. Quick question—are you happy with how many qualified leads you're getting each month?"}
+
+@app.put("/api/prompts/{prompt_name}")
+async def update_prompt(prompt_name: str, data: dict):
+    try:
+        with open(f"prompts/{prompt_name}.txt", "w") as f:
+            f.write(data["content"])
+        return {"success": True, "message": "Prompt updated successfully"}
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
 @app.get("/api/stats")
 async def get_stats():
     db = await get_db()

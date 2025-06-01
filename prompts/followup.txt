@@ -1,9 +1,9 @@
-Hi {contact}, this is Sarah calling back from SalesDialer. 
+Hi {contact}, this is Alex from SalesDialer following up on our previous conversation about {company}.
 
-I tried reaching you earlier about the AI calling solution that could help {company} streamline your outbound sales process.
+I wanted to circle back and see if you've had a chance to think about the automated calling solution we discussed. I know you mentioned that your team is spending a lot of time on manual outreach.
 
-I know you're probably busy, so I'll keep this brief. We're seeing companies like {company} reduce their manual calling time by 75% while actually improving their connect rates.
+Since we last spoke, I've been thinking about {company} specifically and I believe our AI calling system could help you increase your qualified leads by at least 40% while reducing your team's workload.
 
-I have just 5 minutes available today - would that work for a quick overview of how this could impact {company}?
+I have a few time slots available this week for a quick 15-minute call to answer any questions you might have and show you exactly how this would work for {company}.
 
-If now isn't good, when would be a better time to connect?
+Would Thursday at 2 PM or Friday at 10 AM work better for your schedule?

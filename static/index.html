@@ -237,15 +237,142 @@
 
                 <!-- Prompts Page -->
                 <div id="promptsPage" class="page" style="display: none;">
-                    <div class="bg-white rounded-lg shadow">
-                        <div class="p-6 border-b">
-                            <h3 class="text-lg font-semibold">Call Scripts & Prompts</h3>
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-semibold text-gray-900">Prompts</h2>
+                        <button id="createPromptBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
+                            <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                            Create New Prompt
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Available Prompts -->
+                        <div class="bg-white rounded-lg shadow">
+                            <div class="p-6 border-b">
+                                <h3 class="text-lg font-semibold">Available Prompts</h3>
+                                <p class="text-sm text-gray-600">Manage your AI calling scripts</p>
+                            </div>
+                            <div class="p-6">
+                                <div class="space-y-4" id="promptsList">
+                                    <div class="prompt-item border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50" data-prompt="default">
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <h4 class="font-medium">Default</h4>
+                                                <p class="text-sm text-gray-600">File: default.txt</p>
+                                                <span class="inline-block mt-2 px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded">Default</span>
+                                            </div>
+                                            <div class="flex space-x-2">
+                                                <button class="p-2 text-gray-400 hover:text-gray-600" title="Preview">
+                                                    <i data-lucide="eye" class="w-4 h-4"></i>
+                                                </button>
+                                                <button class="p-2 text-gray-400 hover:text-gray-600" title="Edit">
+                                                    <i data-lucide="edit" class="w-4 h-4"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="prompt-item border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50" data-prompt="demo">
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <h4 class="font-medium">Demo</h4>
+                                                <p class="text-sm text-gray-600">File: demo.txt</p>
+                                            </div>
+                                            <div class="flex space-x-2">
+                                                <button class="p-2 text-gray-400 hover:text-gray-600" title="Preview">
+                                                    <i data-lucide="eye" class="w-4 h-4"></i>
+                                                </button>
+                                                <button class="p-2 text-gray-400 hover:text-gray-600" title="Edit">
+                                                    <i data-lucide="edit" class="w-4 h-4"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="prompt-item border border-gray-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50" data-prompt="followup">
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <h4 class="font-medium">Followup</h4>
+                                                <p class="text-sm text-gray-600">File: followup.txt</p>
+                                            </div>
+                                            <div class="flex space-x-2">
+                                                <button class="p-2 text-gray-400 hover:text-gray-600" title="Preview">
+                                                    <i data-lucide="eye" class="w-4 h-4"></i>
+                                                </button>
+                                                <button class="p-2 text-gray-400 hover:text-gray-600" title="Edit">
+                                                    <i data-lucide="edit" class="w-4 h-4"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Prompt Guidelines -->
+                                <div class="mt-8">
+                                    <h4 class="font-medium mb-4">Prompt Guidelines</h4>
+                                    <p class="text-sm text-gray-600 mb-4">Best practices for creating effective AI calling scripts</p>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <h5 class="font-medium text-sm mb-2">Structure Tips</h5>
+                                            <ul class="text-sm text-gray-600 space-y-1">
+                                                <li>• Start with a friendly greeting</li>
+                                                <li>• Clearly state your purpose</li>
+                                                <li>• Ask engaging questions</li>
+                                                <li>• Include natural conversation flow</li>
+                                                <li>• End with a clear call-to-action</li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h5 class="font-medium text-sm mb-2">Variables</h5>
+                                            <ul class="text-sm text-gray-600 space-y-1">
+                                                <li>• Use {contact} for personalization</li>
+                                                <li>• Include {company} for business context</li>
+                                                <li>• {phone} is available if needed</li>
+                                                <li>• Variables are automatically replaced</li>
+                                                <li>• Test prompts before campaigns</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="p-6">
-                            <div class="bg-gray-50 p-4 rounded-lg">
-                                <h4 class="font-medium mb-2">Default Sales Script</h4>
-                                <p class="text-gray-600 text-sm mb-4">Hi, this is Alex from Luma. Quick question—are you happy with how many qualified leads you're getting each month?</p>
-                                <button class="text-blue-600 hover:text-blue-800 text-sm">Edit Script</button>
+
+                        <!-- Select a Prompt -->
+                        <div class="bg-white rounded-lg shadow">
+                            <div class="p-6 border-b flex justify-between items-center">
+                                <div>
+                                    <h3 class="text-lg font-semibold" id="selectedPromptTitle">Select a Prompt</h3>
+                                    <p class="text-sm text-gray-600">View prompt details</p>
+                                </div>
+                                <button id="editPromptBtn" class="text-blue-600 hover:text-blue-800 text-sm" style="display: none;">Edit</button>
+                            </div>
+                            <div class="p-6">
+                                <div id="promptDetails" class="text-center py-12">
+                                    <i data-lucide="file-text" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
+                                    <p class="text-gray-500">Select a prompt from the list to view or edit</p>
+                                </div>
+
+                                <div id="promptEditor" style="display: none;">
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Script Content</label>
+                                        <textarea id="promptContent" rows="12" class="w-full border border-gray-300 rounded-lg px-3 py-2 font-mono text-sm" placeholder="Enter your calling script here..."></textarea>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <h5 class="font-medium text-sm mb-2 text-gray-700">Variables available:</h5>
+                                        <ul class="text-sm text-gray-600 space-y-1">
+                                            <li>• <code class="bg-gray-100 px-1 rounded">{contact}</code> - Contact name</li>
+                                            <li>• <code class="bg-gray-100 px-1 rounded">{company}</code> - Company name</li>
+                                            <li>• <code class="bg-gray-100 px-1 rounded">{phone}</code> - Phone number</li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="flex justify-end space-x-3">
+                                        <button id="cancelEditBtn" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+                                        <button id="savePromptBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Save Changes</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -498,6 +625,89 @@
         document.getElementById('uploadLeadsBtn').addEventListener('click', showUploadModal);
         document.getElementById('cancelUpload').addEventListener('click', hideUploadModal);
         
+        // Prompts functionality
+        let currentPrompt = null;
+        
+        document.querySelectorAll('.prompt-item').forEach(item => {
+            item.addEventListener('click', async (e) => {
+                if (e.target.closest('button')) return; // Don't trigger on button clicks
+                
+                const promptName = item.dataset.prompt;
+                await selectPrompt(promptName);
+            });
+        });
+        
+        async function selectPrompt(promptName) {
+            currentPrompt = promptName;
+            
+            // Update selection styling
+            document.querySelectorAll('.prompt-item').forEach(item => {
+                item.classList.remove('border-blue-500', 'bg-blue-50');
+                item.classList.add('border-gray-200');
+            });
+            document.querySelector(`[data-prompt="${promptName}"]`).classList.add('border-blue-500', 'bg-blue-50');
+            document.querySelector(`[data-prompt="${promptName}"]`).classList.remove('border-gray-200');
+            
+            try {
+                const response = await fetch(`/api/prompts/${promptName}`);
+                const prompt = await response.json();
+                
+                document.getElementById('selectedPromptTitle').textContent = prompt.name || promptName;
+                document.getElementById('editPromptBtn').style.display = 'block';
+                document.getElementById('promptDetails').style.display = 'none';
+                document.getElementById('promptEditor').style.display = 'block';
+                document.getElementById('promptContent').value = prompt.content || '';
+                document.getElementById('promptContent').readOnly = true;
+                document.getElementById('savePromptBtn').style.display = 'none';
+                document.getElementById('cancelEditBtn').textContent = 'Close';
+            } catch (error) {
+                console.error('Failed to load prompt:', error);
+            }
+        }
+        
+        document.getElementById('editPromptBtn').addEventListener('click', () => {
+            document.getElementById('promptContent').readOnly = false;
+            document.getElementById('savePromptBtn').style.display = 'inline-block';
+            document.getElementById('cancelEditBtn').textContent = 'Cancel';
+        });
+        
+        document.getElementById('cancelEditBtn').addEventListener('click', () => {
+            if (currentPrompt) {
+                selectPrompt(currentPrompt); // Reload original content
+            } else {
+                document.getElementById('promptDetails').style.display = 'block';
+                document.getElementById('promptEditor').style.display = 'none';
+                document.getElementById('editPromptBtn').style.display = 'none';
+            }
+        });
+        
+        document.getElementById('savePromptBtn').addEventListener('click', async () => {
+            if (!currentPrompt) return;
+            
+            try {
+                const response = await fetch(`/api/prompts/${currentPrompt}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        content: document.getElementById('promptContent').value
+                    })
+                });
+                
+                if (response.ok) {
+                    alert('Prompt saved successfully!');
+                    document.getElementById('promptContent').readOnly = true;
+                    document.getElementById('savePromptBtn').style.display = 'none';
+                    document.getElementById('cancelEditBtn').textContent = 'Close';
+                } else {
+                    alert('Failed to save prompt. Please try again.');
+                }
+            } catch (error) {
+                alert('Error saving prompt: ' + error.message);
+            }
+        });
+
         // Load leads data
         async function loadLeads() {
             try {

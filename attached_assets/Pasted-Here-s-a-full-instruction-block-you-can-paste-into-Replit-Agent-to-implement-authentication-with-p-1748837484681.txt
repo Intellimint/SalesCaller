@@ -1,0 +1,80 @@
+Here’s a full instruction block you can paste into Replit Agent to implement **authentication with per-user data and demo mode**:
+
+---
+
+### 🧠 REPLIT AGENT INSTRUCTION BLOCK — AUTH SYSTEM + DEMO USER
+
+**Please implement the following authentication system for the SalesCaller app:**
+
+---
+
+#### 🔐 USER AUTHENTICATION (EMAIL + PASSWORD)
+
+1. Create a new `users` table in the database with the following fields:
+
+   * `id` (primary key)
+   * `email` (unique)
+   * `password_hash` (bcrypt hash)
+   * `created_at`
+
+2. Create API routes for:
+
+   * `POST /api/signup` → Accepts email + password, creates user
+   * `POST /api/login` → Accepts email + password, returns JWT
+   * `POST /api/logout` → Clears session
+   * `GET /api/me` → Returns current user details (if logged in)
+
+3. Use **JWT-based authentication** (token stored in localStorage) with a secure `auth_middleware.py` to protect all API routes.
+
+---
+
+#### 🔁 PER-USER DATA ISOLATION
+
+1. Add a `user_id` column to:
+
+   * `leads`
+   * `calls`
+   * `campaigns`
+   * `email_logs`
+
+2. On data fetch/upload:
+
+   * Automatically associate data with `user_id` of the logged-in user.
+   * Restrict API access so each user only sees their own data.
+
+---
+
+#### 🧪 DEMO MODE (SAMPLE USER)
+
+1. Create a hardcoded **demo user** (e.g. `demo@outboundfox.com`, password: `demo123`)
+2. When users land on the site without an account, allow them to click **“Try a Demo”** which logs in the demo user.
+3. For this user only:
+
+   * Preload the **SF Restaurant Sample CSV**
+   * Show the leads, campaigns, and analytics
+   * **Disable actual call/email triggers** (disable buttons)
+   * Show "sample data" tag or greyed-out style
+
+---
+
+#### 🔒 FRONTEND CHANGES
+
+1. Add **login/signup modal** or page at `/login`
+2. Update the navigation bar:
+
+   * If logged in → Show Dashboard, Leads, Logout
+   * If not logged in → Show Login, Try Demo
+3. Add `useAuth()` hook or equivalent context to manage auth state
+
+---
+
+#### ✅ FINAL TASKS
+
+* Redirect unauthorized users to login
+* Ensure demo user data can't be modified permanently (optional reset on app restart)
+* Add test user to test environment: `demo@outboundfox.com` / `demo123`
+* Display sample leads as **read-only + greyed-out UI elements**
+
+---
+
+Would you like help testing the JWT routes or login flow after Replit agent implements it?

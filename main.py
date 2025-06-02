@@ -2,9 +2,13 @@ import os
 import asyncio
 import uvicorn
 import json
-from fastapi import FastAPI, UploadFile, Form, BackgroundTasks, HTTPException
+import bcrypt
+import jwt
+from datetime import datetime, timedelta
+from fastapi import FastAPI, UploadFile, Form, BackgroundTasks, HTTPException, Depends, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import aiosqlite
 import csv
 import io
@@ -15,6 +19,14 @@ app = FastAPI()
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+# JWT Configuration
+JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key-change-in-production")
+JWT_ALGORITHM = "HS256"
+JWT_EXPIRATION_HOURS = 24
+
+# Security
+security = HTTPBearer(auto_error=False)
+
 # Global queue and database
 QUEUE = asyncio.Queue()
 CONCURRENCY = int(os.getenv("CONCURRENCY", 3))
@@ -22,9 +34,21 @@ CALLERS = []
 
 async def init_db():
     db = await aiosqlite.connect("data.db")
+    
+    # Users table
+    await db.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    
     await db.execute("""
         CREATE TABLE IF NOT EXISTS leads (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
             phone TEXT NOT NULL,
             company TEXT,
             contact TEXT,
@@ -32,12 +56,14 @@ async def init_db():
             prompt_name TEXT DEFAULT 'default',
             bland_call_id TEXT,
             is_sample BOOLEAN DEFAULT FALSE,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
         )
     """)
     await db.execute("""
         CREATE TABLE IF NOT EXISTS calls (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
             lead_id INTEGER,
             phone TEXT,
             company TEXT,
@@ -53,16 +79,28 @@ async def init_db():
             interest_level TEXT,
             summary TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id),
             FOREIGN KEY (lead_id) REFERENCES leads (id)
         )
     """)
     
-    # Add is_sample column if it doesn't exist (migration for existing databases)
+    # Add migration columns if they don't exist (migration for existing databases)
     try:
         await db.execute("ALTER TABLE leads ADD COLUMN is_sample BOOLEAN DEFAULT FALSE")
         await db.commit()
     except Exception:
-        # Column already exists, ignore error
+        pass
+    
+    try:
+        await db.execute("ALTER TABLE leads ADD COLUMN user_id INTEGER")
+        await db.commit()
+    except Exception:
+        pass
+    
+    try:
+        await db.execute("ALTER TABLE calls ADD COLUMN user_id INTEGER")
+        await db.commit()
+    except Exception:
         pass
     
     await db.commit()
@@ -71,17 +109,105 @@ async def init_db():
 async def get_db():
     return await aiosqlite.connect("data.db")
 
-async def load_sample_data():
-    """Load sample restaurant data if leads table is empty"""
+# Authentication utilities
+def hash_password(password: str) -> str:
+    """Hash a password using bcrypt"""
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+def verify_password(password: str, hashed: str) -> bool:
+    """Verify a password against its hash"""
+    return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+
+def create_jwt_token(user_id: int, email: str) -> str:
+    """Create a JWT token for a user"""
+    payload = {
+        'user_id': user_id,
+        'email': email,
+        'exp': datetime.utcnow() + timedelta(hours=JWT_EXPIRATION_HOURS)
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+def decode_jwt_token(token: str) -> dict:
+    """Decode and verify a JWT token"""
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get the current authenticated user"""
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    
+    payload = decode_jwt_token(credentials.credentials)
+    user_id = payload.get('user_id')
+    email = payload.get('email')
+    
+    if not user_id or not email:
+        raise HTTPException(status_code=401, detail="Invalid token payload")
+    
+    # Verify user exists in database
+    db = await get_db()
+    async with db.execute("SELECT id, email FROM users WHERE id = ?", (user_id,)) as cursor:
+        user = await cursor.fetchone()
+    await db.close()
+    
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    
+    return {"id": user[0], "email": user[1]}
+
+async def get_current_user_optional(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get the current user if authenticated, otherwise return None"""
+    if not credentials:
+        return None
+    
+    try:
+        return await get_current_user(credentials)
+    except HTTPException:
+        return None
+
+async def create_demo_user():
+    """Create demo user and load sample data"""
     db = await get_db()
     
-    # Check if there are any leads (sample or real)
-    async with db.execute("SELECT COUNT(*) FROM leads") as cursor:
-        result = await cursor.fetchone()
-        lead_count = result[0] if result else 0
+    # Check if demo user exists
+    async with db.execute("SELECT id FROM users WHERE email = ?", ("demo@outboundfox.com",)) as cursor:
+        demo_user = await cursor.fetchone()
     
-    if lead_count == 0:
-        print("[STARTUP] Loading sample restaurant data...")
+    if not demo_user:
+        # Create demo user
+        password_hash = hash_password("demo123")
+        await db.execute("""
+            INSERT INTO users (email, password_hash)
+            VALUES (?, ?)
+        """, ("demo@outboundfox.com", password_hash))
+        await db.commit()
+        
+        # Get the demo user ID
+        async with db.execute("SELECT id FROM users WHERE email = ?", ("demo@outboundfox.com",)) as cursor:
+            demo_user = await cursor.fetchone()
+        
+        print("[STARTUP] Created demo user: demo@outboundfox.com")
+    
+    if demo_user:
+        demo_user_id = demo_user[0]
+    else:
+        # Get the newly created demo user ID
+        async with db.execute("SELECT id FROM users WHERE email = ?", ("demo@outboundfox.com",)) as cursor:
+            demo_user = await cursor.fetchone()
+        demo_user_id = demo_user[0]
+    
+    # Check if demo user has sample leads
+    async with db.execute("SELECT COUNT(*) FROM leads WHERE user_id = ? AND is_sample = TRUE", (demo_user_id,)) as cursor:
+        result = await cursor.fetchone()
+        sample_count = result[0] if result else 0
+    
+    if sample_count == 0:
+        print("[STARTUP] Loading sample restaurant data for demo user...")
         sample_leads = [
             ("3rd Cousin", "14158143709", "919 Cortland Ave, San Francisco, CA 94110, United States"),
             ("The Grove - Yerba Buena", "14156559194", "QHPX+J6 Yerba Buena, San Francisco, CA, USA"),
@@ -96,12 +222,12 @@ async def load_sample_data():
         
         for contact, phone, company in sample_leads:
             await db.execute("""
-                INSERT INTO leads (contact, phone, company, status, is_sample, prompt_name)
-                VALUES (?, ?, ?, 'sample', TRUE, 'default')
-            """, (contact, phone, company))
+                INSERT INTO leads (user_id, contact, phone, company, status, is_sample, prompt_name)
+                VALUES (?, ?, ?, ?, 'sample', TRUE, 'default')
+            """, (demo_user_id, contact, phone, company))
         
         await db.commit()
-        print(f"[STARTUP] Loaded {len(sample_leads)} sample restaurant leads")
+        print(f"[STARTUP] Loaded {len(sample_leads)} sample restaurant leads for demo user")
     
     await db.close()
 
@@ -162,7 +288,7 @@ async def worker():
 @app.on_event("startup")
 async def startup():
     await init_db()
-    await load_sample_data()
+    await create_demo_user()
     for _ in range(CONCURRENCY):
         task = asyncio.create_task(worker())
         CALLERS.append(task)

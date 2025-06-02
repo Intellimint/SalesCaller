@@ -1,17 +1,6 @@
-# Sales Ninja - AI Outbound Calling Platform
+# Outbound Fox - AI Outbound Calling Platform
 
-FastAPI-based SaaS platform for automated outbound sales calls using Bland.ai.
-
-## Setup
-
-1. **Configure Secrets** - Add these environment variables in Replit Secrets:
-   - `BLAND_API_KEY` - Your Bland.ai API key
-   - `VOICE_ID` - Voice ID for calls (optional)
-   - `CALLBACK_URL` - https://callninja.replit.app/webhook
-
-2. **Run the Application** - Click the *Run* button
-
-## Usage
+FastAPI-based SaaS platform for automated outbound sales calls.
 
 ### Start a Campaign
 

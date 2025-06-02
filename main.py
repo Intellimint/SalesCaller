@@ -31,6 +31,7 @@ async def init_db():
             status TEXT DEFAULT 'pending',
             prompt_name TEXT DEFAULT 'default',
             bland_call_id TEXT,
+            is_sample BOOLEAN DEFAULT FALSE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
@@ -55,11 +56,54 @@ async def init_db():
             FOREIGN KEY (lead_id) REFERENCES leads (id)
         )
     """)
+    
+    # Add is_sample column if it doesn't exist (migration for existing databases)
+    try:
+        await db.execute("ALTER TABLE leads ADD COLUMN is_sample BOOLEAN DEFAULT FALSE")
+        await db.commit()
+    except Exception:
+        # Column already exists, ignore error
+        pass
+    
     await db.commit()
     await db.close()
 
 async def get_db():
     return await aiosqlite.connect("data.db")
+
+async def load_sample_data():
+    """Load sample restaurant data if leads table is empty"""
+    db = await get_db()
+    
+    # Check if there are any leads (sample or real)
+    async with db.execute("SELECT COUNT(*) FROM leads") as cursor:
+        result = await cursor.fetchone()
+        lead_count = result[0] if result else 0
+    
+    if lead_count == 0:
+        print("[STARTUP] Loading sample restaurant data...")
+        sample_leads = [
+            ("3rd Cousin", "14158143709", "919 Cortland Ave, San Francisco, CA 94110, United States"),
+            ("The Grove - Yerba Buena", "14156559194", "QHPX+J6 Yerba Buena, San Francisco, CA, USA"),
+            ("Fog Harbor Fish House", "14154212442", "39 Pier, San Francisco, CA 94133, United States"),
+            ("Chez Maman East", "14156559542", "QJ63+X7 Potrero Hill, San Francisco, CA, USA"),
+            ("Sotto Mare", "14153983181", "QHXR+WM North Beach, San Francisco, CA, USA"),
+            ("Gary Danko", "14157492060", "RH4H+8Q Fort Mason, San Francisco, CA, USA"),
+            ("Kokkari Estiatorio", "14159810983", "QJW2+R3 Northern Waterfront, San Francisco, CA, USA"),
+            ("Delancey Street Restaurant", "14155125179", "QJM6+PJ South Beach, San Francisco, CA, USA"),
+            ("Serafina", "14158741936", "QHWM+QR Russian Hill, San Francisco, CA, USA"),
+        ]
+        
+        for contact, phone, company in sample_leads:
+            await db.execute("""
+                INSERT INTO leads (contact, phone, company, status, is_sample, prompt_name)
+                VALUES (?, ?, ?, 'sample', TRUE, 'default')
+            """, (contact, phone, company))
+        
+        await db.commit()
+        print(f"[STARTUP] Loaded {len(sample_leads)} sample restaurant leads")
+    
+    await db.close()
 
 async def create_call(lead_id: int):
     """Create a call via Bland.ai API"""
@@ -118,6 +162,7 @@ async def worker():
 @app.on_event("startup")
 async def startup():
     await init_db()
+    await load_sample_data()
     for _ in range(CONCURRENCY):
         task = asyncio.create_task(worker())
         CALLERS.append(task)
@@ -157,7 +202,8 @@ async def upload_leads(file: UploadFile, prompt_name: str = Form("default")):
 @app.post("/api/start")
 async def start_calls():
     db = await get_db()
-    async with db.execute("SELECT id FROM leads WHERE status='pending'") as cur:
+    # Exclude sample leads from campaigns
+    async with db.execute("SELECT id FROM leads WHERE status='pending' AND is_sample = FALSE") as cur:
         rows = await cur.fetchall()
     await db.close()
     

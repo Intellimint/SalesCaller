@@ -1,0 +1,83 @@
+Here’s a clear, step-by-step instruction set you can pass directly to the Replit agent to implement **non-callable sample data** as part of the app experience:
+
+---
+
+### 🛠️ Replit Agent Instructions: Implement Sample Lead Dataset (Non-callable)
+
+Please complete the following tasks to safely integrate a sample dataset that new users can see but not call or email:
+
+---
+
+### **1. Database Schema Update**
+
+* Modify the `leads` table to add a new column:
+
+```sql
+ALTER TABLE leads ADD COLUMN is_sample BOOLEAN DEFAULT FALSE;
+```
+
+---
+
+### **2. Sample Data Loader**
+
+* On app startup (or first login), check if the `leads` table is empty.
+* If empty, load `SF Restaurant Sample - Sheet1.csv` into the database with:
+
+```python
+is_sample = True
+```
+
+* This data should **not trigger any calls or emails**.
+
+---
+
+### **3. Frontend UI Changes (Leads Page)**
+
+* For all leads where `is_sample = true`:
+
+  * Grey out the row visually (e.g. with Tailwind `opacity-50` or similar).
+  * Add a `badge` or `label` that says “Sample” next to the name or company.
+  * Disable all action buttons (Call, Email, etc.) for these leads.
+  * Add a tooltip: `"This is demo data to show how the system works. Upload your own leads to activate calling."`
+
+---
+
+### **4. Campaign Safeguards**
+
+* Update campaign creation logic to **exclude** any lead with `is_sample = true`.
+
+Example:
+
+```sql
+SELECT * FROM leads WHERE is_sample = FALSE AND campaign_id = ?
+```
+
+---
+
+### **5. "Remove Sample Data" Feature**
+
+* On the Leads page, add a button:
+
+  * Label: `Remove Sample Data`
+  * On click, call backend endpoint:
+
+```http
+DELETE /api/leads?sample_only=true
+```
+
+* In the backend, implement:
+
+```python
+@app.delete("/api/leads")
+def delete_sample_leads(sample_only: bool = False):
+    if sample_only:
+        db.execute("DELETE FROM leads WHERE is_sample = TRUE")
+```
+
+---
+
+### ✅ Summary:
+
+This ensures new users always see how the app works, while avoiding any real-world issues from calling demo contacts.
+
+Let me know once it's wired up and I’ll help you polish the experience further.

@@ -297,6 +297,10 @@ async def startup():
 async def serve_landing():
     return FileResponse("static/landing.html")
 
+@app.get("/login")
+async def serve_login():
+    return FileResponse("static/login.html")
+
 @app.get("/app")
 async def serve_app():
     return FileResponse("static/index.html")

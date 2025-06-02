@@ -305,8 +305,108 @@ async def serve_app():
 async def health_check():
     return {"status": "ok", "queue": QUEUE.qsize()}
 
+# Authentication endpoints
+@app.post("/api/signup")
+async def signup(request: Request):
+    data = await request.json()
+    email = data.get("email", "").strip().lower()
+    password = data.get("password", "")
+    
+    if not email or not password:
+        raise HTTPException(status_code=400, detail="Email and password are required")
+    
+    if len(password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+    
+    db = await get_db()
+    
+    # Check if user already exists
+    async with db.execute("SELECT id FROM users WHERE email = ?", (email,)) as cursor:
+        existing_user = await cursor.fetchone()
+    
+    if existing_user:
+        await db.close()
+        raise HTTPException(status_code=400, detail="User already exists with this email")
+    
+    # Create new user
+    password_hash = hash_password(password)
+    await db.execute("""
+        INSERT INTO users (email, password_hash)
+        VALUES (?, ?)
+    """, (email, password_hash))
+    await db.commit()
+    
+    # Get the new user ID
+    async with db.execute("SELECT id FROM users WHERE email = ?", (email,)) as cursor:
+        user = await cursor.fetchone()
+    
+    await db.close()
+    
+    # Create JWT token
+    token = create_jwt_token(user[0], email)
+    
+    return {"token": token, "user": {"id": user[0], "email": email}}
+
+@app.post("/api/login")
+async def login(request: Request):
+    data = await request.json()
+    email = data.get("email", "").strip().lower()
+    password = data.get("password", "")
+    
+    if not email or not password:
+        raise HTTPException(status_code=400, detail="Email and password are required")
+    
+    db = await get_db()
+    
+    # Get user from database
+    async with db.execute("SELECT id, email, password_hash FROM users WHERE email = ?", (email,)) as cursor:
+        user = await cursor.fetchone()
+    
+    await db.close()
+    
+    if not user or not verify_password(password, user[2]):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    # Create JWT token
+    token = create_jwt_token(user[0], user[1])
+    
+    return {"token": token, "user": {"id": user[0], "email": user[1]}}
+
+@app.post("/api/demo-login")
+async def demo_login():
+    """Login as demo user"""
+    email = "demo@outboundfox.com"
+    password = "demo123"
+    
+    db = await get_db()
+    
+    # Get demo user from database
+    async with db.execute("SELECT id, email, password_hash FROM users WHERE email = ?", (email,)) as cursor:
+        user = await cursor.fetchone()
+    
+    await db.close()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="Demo user not found")
+    
+    # Create JWT token
+    token = create_jwt_token(user[0], user[1])
+    
+    return {"token": token, "user": {"id": user[0], "email": user[1], "is_demo": True}}
+
+@app.get("/api/me")
+async def get_current_user_profile(current_user: dict = Depends(get_current_user)):
+    """Get current user profile"""
+    is_demo = current_user["email"] == "demo@outboundfox.com"
+    return {"id": current_user["id"], "email": current_user["email"], "is_demo": is_demo}
+
+@app.post("/api/logout")
+async def logout():
+    """Logout endpoint (client-side token removal)"""
+    return {"message": "Logged out successfully"}
+
 @app.post("/api/upload-leads")
-async def upload_leads(file: UploadFile, prompt_name: str = Form("default")):
+async def upload_leads(file: UploadFile, prompt_name: str = Form("default"), current_user: dict = Depends(get_current_user)):
     content = await file.read()
     text = content.decode("utf-8")
     reader = csv.DictReader(io.StringIO(text))
@@ -316,8 +416,8 @@ async def upload_leads(file: UploadFile, prompt_name: str = Form("default")):
     for row in reader:
         if "phone" in row:
             await db.execute(
-                "INSERT INTO leads (phone, company, contact, prompt_name) VALUES (?, ?, ?, ?)",
-                (row["phone"], row.get("company"), row.get("contact"), prompt_name)
+                "INSERT INTO leads (user_id, phone, company, contact, prompt_name) VALUES (?, ?, ?, ?, ?)",
+                (current_user["id"], row["phone"], row.get("company"), row.get("contact"), prompt_name)
             )
             count += 1
     await db.commit()
@@ -326,10 +426,10 @@ async def upload_leads(file: UploadFile, prompt_name: str = Form("default")):
     return {"message": f"Uploaded {count} leads"}
 
 @app.post("/api/start")
-async def start_calls():
+async def start_calls(current_user: dict = Depends(get_current_user)):
     db = await get_db()
-    # Exclude sample leads from campaigns
-    async with db.execute("SELECT id FROM leads WHERE status='pending' AND is_sample = FALSE") as cur:
+    # Exclude sample leads from campaigns and filter by user
+    async with db.execute("SELECT id FROM leads WHERE status='pending' AND is_sample = FALSE AND user_id = ?", (current_user["id"],)) as cur:
         rows = await cur.fetchall()
     await db.close()
     
@@ -341,28 +441,29 @@ async def start_calls():
     return {"message": f"Started campaign", "queued": queued}
 
 @app.get("/api/leads")
-async def list_leads():
+async def list_leads(current_user: dict = Depends(get_current_user)):
     db = await get_db()
     async with db.execute("""
         SELECT phone, company, contact, status, is_sample, id
         FROM leads 
+        WHERE user_id = ?
         ORDER BY created_at DESC 
         LIMIT 100
-    """) as cur:
+    """, (current_user["id"],)) as cur:
         rows = await cur.fetchall()
     await db.close()
     return [{"phone": r[0], "company": r[1], "contact": r[2], "status": r[3], "is_sample": bool(r[4]), "id": r[5]} for r in rows]
 
 @app.delete("/api/leads")
-async def delete_sample_leads(sample_only: bool = False):
+async def delete_sample_leads(sample_only: bool = False, current_user: dict = Depends(get_current_user)):
     """Remove sample leads from the database"""
     if sample_only:
         db = await get_db()
-        async with db.execute("SELECT COUNT(*) FROM leads WHERE is_sample = TRUE") as cursor:
+        async with db.execute("SELECT COUNT(*) FROM leads WHERE is_sample = TRUE AND user_id = ?", (current_user["id"],)) as cursor:
             result = await cursor.fetchone()
             count = result[0] if result else 0
         
-        await db.execute("DELETE FROM leads WHERE is_sample = TRUE")
+        await db.execute("DELETE FROM leads WHERE is_sample = TRUE AND user_id = ?", (current_user["id"],))
         await db.commit()
         await db.close()
         

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Outbound Fox</title>
+    <meta name="description" content="Sign in to your OutboundFox account to manage AI-powered outbound sales calls and campaigns.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        }
+        .hero-section {
+            background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 50%, #fed7aa 100%);
+        }
+    </style>
+</head>
+<body class="min-h-screen hero-section">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center">
+                        <img src="/static/fox-logo.png" alt="Outbound Fox" class="w-6 h-6 filter invert">
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900">Outbound Fox</h1>
+                    </div>
+                </div>
+                <div>
+                    <a href="/" class="text-orange-600 hover:text-orange-700 font-medium">← Back to Home</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Login/Signup Container -->
+    <div class="flex items-center justify-center min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8">
+            <!-- Login Form -->
+            <div id="loginForm" class="bg-white rounded-2xl shadow-xl p-8">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900">Welcome Back</h2>
+                    <p class="text-gray-600 mt-2">Sign in to your OutboundFox account</p>
+                </div>
+                
+                <form id="loginFormElement" class="space-y-6">
+                    <div>
+                        <label for="loginEmail" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input 
+                            type="email" 
+                            id="loginEmail" 
+                            required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            placeholder="Enter your email"
+                        >
+                    </div>
+                    
+                    <div>
+                        <label for="loginPassword" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                        <input 
+                            type="password" 
+                            id="loginPassword" 
+                            required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            placeholder="Enter your password"
+                        >
+                    </div>
+                    
+                    <button 
+                        type="submit" 
+                        class="w-full gradient-bg text-white font-semibold py-3 px-6 rounded-lg hover:shadow-lg transition-all duration-200"
+                    >
+                        Sign In
+                    </button>
+                </form>
+                
+                <div class="mt-6">
+                    <div class="relative">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-gray-300"></div>
+                        </div>
+                        <div class="relative flex justify-center text-sm">
+                            <span class="px-2 bg-white text-gray-500">Or</span>
+                        </div>
+                    </div>
+                    
+                    <button 
+                        id="demoLoginBtn"
+                        class="w-full mt-4 bg-gray-100 text-gray-700 font-semibold py-3 px-6 rounded-lg hover:bg-gray-200 transition-all duration-200 flex items-center justify-center space-x-2"
+                    >
+                        <i data-lucide="play-circle" class="w-5 h-5"></i>
+                        <span>Try Demo Mode</span>
+                    </button>
+                </div>
+                
+                <div class="text-center mt-6">
+                    <p class="text-gray-600">
+                        Don't have an account? 
+                        <button id="showSignupBtn" class="text-orange-600 hover:text-orange-700 font-medium">Sign up</button>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Signup Form -->
+            <div id="signupForm" class="bg-white rounded-2xl shadow-xl p-8 hidden">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900">Create Account</h2>
+                    <p class="text-gray-600 mt-2">Start your outbound sales automation journey</p>
+                </div>
+                
+                <form id="signupFormElement" class="space-y-6">
+                    <div>
+                        <label for="signupEmail" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input 
+                            type="email" 
+                            id="signupEmail" 
+                            required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            placeholder="Enter your email"
+                        >
+                    </div>
+                    
+                    <div>
+                        <label for="signupPassword" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                        <input 
+                            type="password" 
+                            id="signupPassword" 
+                            required
+                            minlength="6"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            placeholder="Choose a secure password (min 6 characters)"
+                        >
+                    </div>
+                    
+                    <div>
+                        <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+                        <input 
+                            type="password" 
+                            id="confirmPassword" 
+                            required
+                            minlength="6"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                            placeholder="Confirm your password"
+                        >
+                    </div>
+                    
+                    <button 
+                        type="submit" 
+                        class="w-full gradient-bg text-white font-semibold py-3 px-6 rounded-lg hover:shadow-lg transition-all duration-200"
+                    >
+                        Create Account
+                    </button>
+                </form>
+                
+                <div class="text-center mt-6">
+                    <p class="text-gray-600">
+                        Already have an account? 
+                        <button id="showLoginBtn" class="text-orange-600 hover:text-orange-700 font-medium">Sign in</button>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="bg-white rounded-2xl shadow-xl p-8 text-center hidden">
+                <div class="animate-spin w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                <p class="text-gray-600">Signing you in...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Form toggle functionality
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const loadingState = document.getElementById('loadingState');
+        const showSignupBtn = document.getElementById('showSignupBtn');
+        const showLoginBtn = document.getElementById('showLoginBtn');
+        const demoLoginBtn = document.getElementById('demoLoginBtn');
+
+        showSignupBtn.addEventListener('click', () => {
+            loginForm.classList.add('hidden');
+            signupForm.classList.remove('hidden');
+        });
+
+        showLoginBtn.addEventListener('click', () => {
+            signupForm.classList.add('hidden');
+            loginForm.classList.remove('hidden');
+        });
+
+        // Show loading state
+        function showLoading() {
+            loginForm.classList.add('hidden');
+            signupForm.classList.add('hidden');
+            loadingState.classList.remove('hidden');
+        }
+
+        // Hide loading state
+        function hideLoading() {
+            loadingState.classList.add('hidden');
+            loginForm.classList.remove('hidden');
+        }
+
+        // Store JWT token
+        function storeToken(token) {
+            localStorage.setItem('authToken', token);
+        }
+
+        // Login form handler
+        document.getElementById('loginFormElement').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            showLoading();
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    storeToken(data.token);
+                    window.location.href = '/app';
+                } else {
+                    hideLoading();
+                    alert(data.detail || 'Login failed. Please try again.');
+                }
+            } catch (error) {
+                hideLoading();
+                alert('Login failed. Please check your connection and try again.');
+                console.error('Login error:', error);
+            }
+        });
+
+        // Signup form handler
+        document.getElementById('signupFormElement').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                alert('Passwords do not match');
+                return;
+            }
+            
+            showLoading();
+            
+            try {
+                const response = await fetch('/api/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    storeToken(data.token);
+                    window.location.href = '/app';
+                } else {
+                    hideLoading();
+                    alert(data.detail || 'Signup failed. Please try again.');
+                }
+            } catch (error) {
+                hideLoading();
+                alert('Signup failed. Please check your connection and try again.');
+                console.error('Signup error:', error);
+            }
+        });
+
+        // Demo login handler
+        demoLoginBtn.addEventListener('click', async () => {
+            showLoading();
+            
+            try {
+                const response = await fetch('/api/demo-login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    storeToken(data.token);
+                    window.location.href = '/app';
+                } else {
+                    hideLoading();
+                    alert('Demo login failed. Please try again.');
+                }
+            } catch (error) {
+                hideLoading();
+                alert('Demo login failed. Please check your connection and try again.');
+                console.error('Demo login error:', error);
+            }
+        });
+
+        // Check if already logged in
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            // Verify token is still valid
+            fetch('/api/me', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            }).then(response => {
+                if (response.ok) {
+                    window.location.href = '/app';
+                }
+            }).catch(() => {
+                // Token invalid, continue with login page
+                localStorage.removeItem('authToken');
+            });
+        }
+    </script>
+</body>
+</html>

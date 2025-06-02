@@ -1,0 +1,79 @@
+Got it. Here's a **revised one-pager sales funnel** tailored to your CEO’s direction—with a **“Test It Now” call experience** as the **main CTA**, just like Bland.ai. The tone remains persuasive, founder-to-founder, with the product speaking for itself through a real-time demo:
+
+---
+
+## 🦊 **OUTBOUNDFOX**
+
+### **Turn Cold Calls into Warm Leads—Automatically**
+
+> OutboundFox is your AI-powered sales rep that makes real calls, qualifies real leads, and emails you the ones that matter.
+
+---
+
+### 🎯 **See It Work—Right Now**
+
+> Want to see how it sounds?
+> Enter your number and we’ll call you with a live demo of the AI in action:
+
+📞 **\[ Input your phone number ]**
+👉 **\[ 🔔 Send Me the Call ]**
+
+> (Takes \~10 seconds. No spam. Just a quick real-time demo.)
+
+---
+
+## 💬 “This actually works.”
+
+SaaS teams use OutboundFox to:
+
+✅ Book meetings while they sleep
+✅ Learn which scripts convert (and why)
+✅ Cut SDR time by 60%
+✅ Follow up instantly via email
+
+---
+
+## 🤖 **How It Works**
+
+1. **Upload Your Leads** – CSV, CRM, or Zapier
+2. **Customize Your Prompt** – Control exactly what your AI says
+3. **Go Live** – We’ll call, qualify, and follow up automatically
+
+---
+
+## 📊 **What You Get**
+
+* 📞 Real AI voice calls to real prospects
+* 🧠 Smart analytics on objections + sentiment
+* ✉️ Email follow-up for hot leads
+* 🪪 Lead cards with call history & next actions
+* 🔁 Self-improving scripts that evolve over time
+
+---
+
+## 💡 **Why It’s Different**
+
+* **Not just voicemail drops.**
+* **Not just transcripts.**
+* **OutboundFox learns—and gets better with every call.**
+
+---
+
+## 🧪 **Test the Call. See for Yourself.**
+
+Put in your number. Hear what your future AI rep sounds like.
+
+📞 **\[ Input your phone number ]**
+👉 **\[ 🔔 Send Me the Call ]**
+
+> *This is the moment SDRs became optional.*
+
+---
+
+Would you like me to package this into:
+
+* 📄 A React + Tailwind-ready HTML/CSS template
+* ✅ A Markdown version for quick Replit implementation
+* 🧩 A version with inline logic to trigger a test call via your API
+
+Let me know how you'd like it formatted for handoff to Replit Agent.

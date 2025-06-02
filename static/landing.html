@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Outbound Fox - Turn Cold Calls into Warm Leads—Automatically</title>
+    <meta name="description" content="OutboundFox is your AI-powered sales rep that makes real calls, qualifies real leads, and emails you the ones that matter. Test it now with a live demo call.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        }
+        .hero-section {
+            background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 50%, #fed7aa 100%);
+        }
+    </style>
+</head>
+<body class="bg-white">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center">
+                        <img src="/static/fox-logo.png" alt="Outbound Fox" class="w-6 h-6 filter invert">
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900">Outbound Fox</h1>
+                    </div>
+                </div>
+                <div>
+                    <a href="/app" class="text-orange-600 hover:text-orange-700 font-medium">Sign In</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section py-20">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+                Turn Cold Calls into <span class="text-orange-600">Warm Leads</span>—Automatically
+            </h2>
+            <p class="text-xl text-gray-600 mb-12 max-w-3xl mx-auto">
+                OutboundFox is your AI-powered sales rep that makes real calls, qualifies real leads, and emails you the ones that matter.
+            </p>
+
+            <!-- Test Call CTA -->
+            <div class="bg-white rounded-2xl shadow-xl p-8 max-w-md mx-auto mb-12">
+                <h3 class="text-2xl font-bold text-gray-900 mb-4">See It Work—Right Now</h3>
+                <p class="text-gray-600 mb-6">Want to see how it sounds? Enter your number and we'll call you with a live demo of the AI in action:</p>
+                
+                <div class="space-y-4">
+                    <input 
+                        type="tel" 
+                        id="demoPhone" 
+                        placeholder="Enter your phone number" 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    >
+                    <button 
+                        onclick="requestDemoCall()" 
+                        class="w-full gradient-bg text-white font-semibold py-3 px-6 rounded-lg hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2"
+                    >
+                        <i data-lucide="phone" class="w-5 h-5"></i>
+                        <span>Send Me the Call</span>
+                    </button>
+                </div>
+                
+                <p class="text-sm text-gray-500 mt-4">Takes ~10 seconds. No spam. Just a quick real-time demo.</p>
+            </div>
+
+            <div class="text-center">
+                <p class="text-lg font-medium text-gray-800 mb-4">"This actually works."</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-20 bg-white">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">SaaS teams use OutboundFox to:</h2>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="calendar" class="w-8 h-8 text-orange-600"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 mb-2">Book meetings while they sleep</h3>
+                </div>
+                
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="trending-up" class="w-8 h-8 text-orange-600"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 mb-2">Learn which scripts convert (and why)</h3>
+                </div>
+                
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="clock" class="w-8 h-8 text-orange-600"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 mb-2">Cut SDR time by 60%</h3>
+                </div>
+                
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="mail" class="w-8 h-8 text-orange-600"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 mb-2">Follow up instantly via email</h3>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="py-20 bg-gray-50">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">How It Works</h2>
+            </div>
+            
+            <div class="space-y-8">
+                <div class="flex items-center space-x-6">
+                    <div class="w-12 h-12 bg-orange-600 text-white rounded-full flex items-center justify-center font-bold text-lg">1</div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-900">Upload Your Leads</h3>
+                        <p class="text-gray-600">CSV, CRM, or Zapier</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-6">
+                    <div class="w-12 h-12 bg-orange-600 text-white rounded-full flex items-center justify-center font-bold text-lg">2</div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-900">Customize Your Prompt</h3>
+                        <p class="text-gray-600">Control exactly what your AI says</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-6">
+                    <div class="w-12 h-12 bg-orange-600 text-white rounded-full flex items-center justify-center font-bold text-lg">3</div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-900">Go Live</h3>
+                        <p class="text-gray-600">We'll call, qualify, and follow up automatically</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- What You Get -->
+    <section class="py-20 bg-white">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">What You Get</h2>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="flex items-start space-x-4">
+                    <i data-lucide="phone" class="w-6 h-6 text-orange-600 mt-1"></i>
+                    <div>
+                        <h3 class="font-semibold text-gray-900">Real AI voice calls to real prospects</h3>
+                    </div>
+                </div>
+                
+                <div class="flex items-start space-x-4">
+                    <i data-lucide="brain" class="w-6 h-6 text-orange-600 mt-1"></i>
+                    <div>
+                        <h3 class="font-semibold text-gray-900">Smart analytics on objections + sentiment</h3>
+                    </div>
+                </div>
+                
+                <div class="flex items-start space-x-4">
+                    <i data-lucide="mail" class="w-6 h-6 text-orange-600 mt-1"></i>
+                    <div>
+                        <h3 class="font-semibold text-gray-900">Email follow-up for hot leads</h3>
+                    </div>
+                </div>
+                
+                <div class="flex items-start space-x-4">
+                    <i data-lucide="user-check" class="w-6 h-6 text-orange-600 mt-1"></i>
+                    <div>
+                        <h3 class="font-semibold text-gray-900">Lead cards with call history & next actions</h3>
+                    </div>
+                </div>
+                
+                <div class="flex items-start space-x-4 md:col-span-2">
+                    <i data-lucide="repeat" class="w-6 h-6 text-orange-600 mt-1"></i>
+                    <div>
+                        <h3 class="font-semibold text-gray-900">Self-improving scripts that evolve over time</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Different -->
+    <section class="py-20 bg-orange-50">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-3xl font-bold text-gray-900 mb-8">Why It's Different</h2>
+            <div class="space-y-4 text-lg text-gray-700">
+                <p><strong>Not just voicemail drops.</strong></p>
+                <p><strong>Not just transcripts.</strong></p>
+                <p class="text-xl font-semibold text-orange-600"><strong>OutboundFox learns—and gets better with every call.</strong></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="py-20 bg-gray-900">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-3xl font-bold text-white mb-4">Test the Call. See for Yourself.</h2>
+            <p class="text-xl text-gray-300 mb-8">Put in your number. Hear what your future AI rep sounds like.</p>
+            
+            <div class="bg-white rounded-2xl shadow-xl p-8 max-w-md mx-auto">
+                <div class="space-y-4">
+                    <input 
+                        type="tel" 
+                        id="finalDemoPhone" 
+                        placeholder="Enter your phone number" 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    >
+                    <button 
+                        onclick="requestDemoCall('finalDemoPhone')" 
+                        class="w-full gradient-bg text-white font-semibold py-3 px-6 rounded-lg hover:shadow-lg transition-all duration-200 flex items-center justify-center space-x-2"
+                    >
+                        <i data-lucide="phone" class="w-5 h-5"></i>
+                        <span>Send Me the Call</span>
+                    </button>
+                </div>
+            </div>
+            
+            <p class="text-gray-400 mt-8 text-lg italic">This is the moment SDRs became optional.</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-white py-8 border-t">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="flex items-center justify-center space-x-3 mb-4">
+                <div class="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center">
+                    <img src="/static/fox-logo.png" alt="Outbound Fox" class="w-5 h-5 filter invert">
+                </div>
+                <span class="font-semibold text-gray-900">Outbound Fox</span>
+            </div>
+            <p class="text-gray-600">&copy; 2025 Outbound Fox. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        async function requestDemoCall(inputId = 'demoPhone') {
+            const phoneInput = document.getElementById(inputId);
+            const phone = phoneInput.value.trim();
+            
+            if (!phone) {
+                alert('Please enter your phone number');
+                return;
+            }
+            
+            // Validate phone number format
+            const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+            if (!phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''))) {
+                alert('Please enter a valid phone number');
+                return;
+            }
+            
+            const button = event.target;
+            const originalText = button.innerHTML;
+            
+            button.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i><span>Calling...</span>';
+            button.disabled = true;
+            
+            try {
+                const response = await fetch('/api/test-call', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        phone: phone,
+                        contact: 'Demo Contact',
+                        company: 'Your Company',
+                        template: 'outbound-fox'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(`Demo call initiated! You should receive a call at ${phone} in about 10 seconds.`);
+                    phoneInput.value = '';
+                } else {
+                    alert(`Error: ${result.message}`);
+                }
+            } catch (error) {
+                alert('Failed to initiate demo call. Please try again.');
+                console.error('Error:', error);
+            } finally {
+                button.innerHTML = originalText;
+                button.disabled = false;
+                lucide.createIcons();
+            }
+        }
+        
+        // Allow Enter key to trigger demo call
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const activeElement = document.activeElement;
+                if (activeElement.id === 'demoPhone') {
+                    requestDemoCall('demoPhone');
+                } else if (activeElement.id === 'finalDemoPhone') {
+                    requestDemoCall('finalDemoPhone');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

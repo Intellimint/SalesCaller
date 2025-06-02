@@ -218,14 +218,31 @@ async def start_calls():
 async def list_leads():
     db = await get_db()
     async with db.execute("""
-        SELECT phone, company, contact, status 
+        SELECT phone, company, contact, status, is_sample, id
         FROM leads 
         ORDER BY created_at DESC 
         LIMIT 100
     """) as cur:
         rows = await cur.fetchall()
     await db.close()
-    return [{"phone": r[0], "company": r[1], "contact": r[2], "status": r[3]} for r in rows]
+    return [{"phone": r[0], "company": r[1], "contact": r[2], "status": r[3], "is_sample": bool(r[4]), "id": r[5]} for r in rows]
+
+@app.delete("/api/leads")
+async def delete_sample_leads(sample_only: bool = False):
+    """Remove sample leads from the database"""
+    if sample_only:
+        db = await get_db()
+        async with db.execute("SELECT COUNT(*) FROM leads WHERE is_sample = TRUE") as cursor:
+            result = await cursor.fetchone()
+            count = result[0] if result else 0
+        
+        await db.execute("DELETE FROM leads WHERE is_sample = TRUE")
+        await db.commit()
+        await db.close()
+        
+        return {"message": f"Removed {count} sample leads"}
+    else:
+        return {"error": "sample_only parameter is required"}
 
 @app.get("/api/calls")
 async def list_calls():

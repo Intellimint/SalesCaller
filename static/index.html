@@ -217,10 +217,16 @@
                     <div class="bg-white rounded-lg shadow">
                         <div class="p-6 border-b flex justify-between items-center">
                             <h3 class="text-lg font-semibold">Leads Management</h3>
-                            <button id="uploadLeadsBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
-                                <i data-lucide="upload" class="w-4 h-4 mr-2 inline"></i>
-                                Upload Leads
-                            </button>
+                            <div class="space-x-2">
+                                <button id="removeSampleBtn" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg" style="display: none;">
+                                    <i data-lucide="trash-2" class="w-4 h-4 mr-2 inline"></i>
+                                    Remove Sample Data
+                                </button>
+                                <button id="uploadLeadsBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                                    <i data-lucide="upload" class="w-4 h-4 mr-2 inline"></i>
+                                    Upload Leads
+                                </button>
+                            </div>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full">
@@ -230,6 +236,7 @@
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="leadsTable" class="divide-y divide-gray-200">
@@ -1030,28 +1037,58 @@
                 const leads = await response.json();
                 
                 const tbody = document.getElementById('leadsTable');
+                const sampleCount = leads.filter(lead => lead.is_sample).length;
+                const realCount = leads.filter(lead => !lead.is_sample).length;
+                
+                // Show/hide remove sample data button
+                const removeSampleBtn = document.getElementById('removeSampleBtn');
+                if (sampleCount > 0) {
+                    removeSampleBtn.style.display = 'inline-block';
+                } else {
+                    removeSampleBtn.style.display = 'none';
+                }
+                
                 if (leads.length === 0) {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="4" class="px-6 py-8 text-center text-gray-500">
+                            <td colspan="5" class="px-6 py-8 text-center text-gray-500">
                                 No leads uploaded yet.
                             </td>
                         </tr>
                     `;
                 } else {
                     tbody.innerHTML = leads.map(lead => `
-                        <tr>
+                        <tr class="${lead.is_sample ? 'opacity-50 bg-gray-50' : ''}" title="${lead.is_sample ? 'This is demo data to show how the system works. Upload your own leads to activate calling.' : ''}">
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${lead.phone}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${lead.company || 'N/A'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                ${lead.company || 'N/A'}
+                                ${lead.is_sample ? '<span class="ml-2 px-2 py-1 text-xs bg-gray-200 text-gray-600 rounded">Sample</span>' : ''}
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${lead.contact || 'N/A'}</td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(lead.status)}">
                                     ${lead.status || 'pending'}
                                 </span>
                             </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                ${lead.is_sample ? 
+                                    '<span class="text-gray-400">Demo Only</span>' : 
+                                    '<button class="text-blue-600 hover:text-blue-800 mr-2">Call</button><button class="text-green-600 hover:text-green-800">Email</button>'
+                                }
+                            </td>
                         </tr>
                     `).join('');
                 }
+                
+                // Update leads counter
+                if (sampleCount > 0 && realCount === 0) {
+                    updateLeadsCounter(`${sampleCount} sample leads (upload your own to start calling)`);
+                } else if (sampleCount > 0 && realCount > 0) {
+                    updateLeadsCounter(`${realCount} real leads, ${sampleCount} sample leads`);
+                } else {
+                    updateLeadsCounter(`${realCount} leads`);
+                }
+                
             } catch (error) {
                 console.error('Failed to load leads:', error);
             }
